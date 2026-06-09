@@ -1,0 +1,3 @@
+- [SOURCE_OF_TRUTH](SOURCE_OF_TRUTH.md) — ⭐ documento canônico do projeto (valores, princípios, governance, roadmap)
+- [Sessão Atual](memory/session-latest.md) — último ponto de parada, próximo passo sugerido
+- [Visão do Projeto](memory/project-overview.md) — visão geral do 3DPrint Store
