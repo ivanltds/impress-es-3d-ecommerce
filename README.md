@@ -83,10 +83,10 @@ maestro-v2.0/
 │   ├── milestones/
 │   └── fura-fila/
 │
+├── maestro-agile-sdd-apresentacao.html  📊 Apresentação (raiz)
 ├── docs/
 │   ├── SDLC.md                 Processo completo (versionado)
 │   ├── maestro-agile-sdd-apresentacao.md
-│   ├── maestro-agile-sdd-apresentacao.html
 │   └── maestro-agile-sdd-apresentacao.pdf
 │
 ├── memory/                     🧠 Persistência entre sessões
@@ -147,7 +147,7 @@ Uma apresentação completa de 34 slides está disponível em 3 formatos:
 
 | Formato | Arquivo |
 |---------|---------|
-| 🌐 HTML | `docs/maestro-agile-sdd-apresentacao.html` |
+| 🌐 HTML | `maestro-agile-sdd-apresentacao.html` |
 | 📄 PDF | `docs/maestro-agile-sdd-apresentacao.pdf` |
 | 📝 Fonte | `docs/maestro-agile-sdd-apresentacao.md` (MARP) |
 
