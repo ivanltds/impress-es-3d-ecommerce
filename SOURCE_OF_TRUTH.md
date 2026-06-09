@@ -1,7 +1,7 @@
-# SOURCE OF TRUTH — 3DPrint Store
+# SOURCE OF TRUTH — E-commerce Impressão 3D Personalizada
 
 > **Metodologia:** Maestro - Agile SDD com TDD
-> **Versão:** 1.1.0
+> **Versão:** 2.0.0
 > **Última atualização:** 2026-06-09
 >
 > ⚠️ **ESTE DOCUMENTO É A FONTE CANÔNICA DO PROJETO.**
@@ -14,12 +14,12 @@
 
 | Atributo | Valor |
 |----------|-------|
-| **Nome** | 3DPrint Store |
-| **Pitch** | E-commerce de itens de impressão 3D — produtos prontos e sob encomenda com personalização |
+| **Nome** | E-commerce de Impressão 3D Personalizada |
+| **Pitch** | E-commerce escalável de produtos impressos em 3D com foco em experiência personalizada — múltiplos nichos (gamer, anime, casa, presentes, automotivo), personalização acessível, aquisição via Instagram e site próprio como hub |
 | **Stack** | Next.js 14+ (App Router), TypeScript strict, Tailwind CSS, shadcn/ui, Supabase, Prisma, Stripe + MercadoPago |
 | **Host** | Vercel |
-| **Idioma** | pt-BR (com estrutura para i18n futura) |
-| **Público** | Consumidores finais brasileiros |
+| **Idioma** | pt-BR |
+| **Público** | Jovens e adultos brasileiros — gamers, geeks, entusiastas de decoração, compradores de presentes, comunidades automotivas |
 
 ---
 
@@ -315,16 +315,19 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 
 ## 8. ROADMAP DE MILESTONES
 
-| # | Milestone | Sprint | Prioridade | Status |
-|---|-----------|--------|------------|--------|
-| M01 | Fundação | 1 | 🔴 MUST HAVE | ⬜ A FAZER |
-| M02 | Catálogo | 2 | 🔴 MUST HAVE | ⬜ A FAZER |
-| M03 | Carrinho | 3 | 🔴 MUST HAVE | ⬜ A FAZER |
-| M04 | Checkout | 4 | 🔴 MUST HAVE 🎯 MVP | ⬜ A FAZER |
-| M05 | Autenticação | 5 | 🟡 SHOULD HAVE | ⬜ A FAZER |
-| M06 | Painel Admin | 6 | 🟡 SHOULD HAVE | ⬜ A FAZER |
-| M07 | Área do Cliente | 7 | 🟢 COULD HAVE | ⬜ A FAZER |
-| M08 | Pós-venda | 8 | 🟢 COULD HAVE | ⬜ A FAZER |
+**MVP = FASE 1 (M01 + M02 + M03 + M04)**
+
+| # | Milestone | Fase | Épicos | Status |
+|---|-----------|------|--------|--------|
+| M00 | Discovery | 0 | — | ⬜ A FAZER |
+| M01 | Foundation | 1 | A (Foundation) | ⬜ A FAZER |
+| M02 | Catalog + Experience | 1 | B + C (Produto) | ⬜ A FAZER |
+| M03 | Cart + Checkout + Customer | 1 | C + D | ⬜ A FAZER |
+| M04 | Admin + Operations + Analytics | 1 🎯 MVP | E + F | ⬜ A FAZER |
+| M05 | Multi-Theme Experience | 2 | Diferenciação | ⬜ A FAZER |
+| M06 | Personalized Customer Area | 2 | Diferenciação | ⬜ A FAZER |
+| M07 | Growth Engine | 3 | Escala | ⬜ A FAZER |
+| M08 | Scale & Optimize | 3 | Escala | ⬜ A FAZER |
 
 **Detalhamento:** `PRD/milestones/MXX-nome.md`
 **Especificações formais:** `specs/MXX-nome.spec.md`
@@ -339,8 +342,15 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 | Fonte da Verdade | `SOURCE_OF_TRUTH.md` | ⭐ Canônico — este documento |
 | Maestro (orquestrador) | `CLAUDE.md` | Executor do processo |
 | Processo SDD detalhado | `docs/SDLC.md` | Especificação do processo |
-| Visão do Produto | `PRD/00-visao.md` | Norte do produto |
-| Roadmap de Milestones | `PRD/01-milestones.md` | Planejamento de entregas |
+| Visão do Produto | `PRD/00-visao.md` | Norte do produto, estratégia, objetivos |
+| Roadmap de Milestones | `PRD/01-milestones.md` | Planejamento de entregas (Fases 0-3) |
+| Escopo Funcional (12 módulos) | `PRD/02-escopo-funcional.md` | Detalhamento dos módulos |
+| Modelo de Dados | `PRD/03-modelo-dados.md` | Schema inicial com todas entidades |
+| Fluxos Principais | `PRD/04-fluxos.md` | 5 fluxos do negócio |
+| Regras de Negócio | `PRD/05-regras-negocio.md` | RNs catalogadas |
+| Temas e Experiência | `PRD/06-temas-experiencia.md` | Estratégia de multi-tema |
+| Analytics | `PRD/07-analytics.md` | Métricas, eventos, dashboards |
+| Riscos e Integrações | `PRD/08-riscos.md` | Riscos mapeados e decisões em aberto |
 | Detalhamento Milestone | `PRD/milestones/MXX-nome.md` | Definição do milestone |
 | Especificação Formal (Gherkin) | `specs/MXX-nome.spec.md` | Contrato técnico testável |
 | Fura-filas | `PRD/fura-fila/` | Emergenciais |
@@ -351,20 +361,16 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 
 ## 10. CHANGELOG
 
+### v2.0.0 (2026-06-09)
+- **PRD completo:** Visão estratégica, 12 módulos, modelo de dados (20+ entidades), fluxos, regras, analytics
+- **Roadmap reestruturado:** 4 fases (Discovery → MVP → Diferenciação → Escala), 9 milestones
+- **MVP redefinido:** M01-M04 com épicos A-F
+- **Experience Engine:** Estratégia de multi-tema documentada
+- **Decisões em aberto:** 10 decisões mapeadas para FASE 0
+- **Novos artefatos PRD:** Escopo funcional, modelo de dados, fluxos, regras de negócio, analytics, riscos
+
 ### v1.1.0 (2026-06-09)
-- **TDD integrado ao ciclo SDD:** Testes escritos ANTES do código (Test First)
-- **FASE 2 renomeada:** Test Authoring (QA escreve testes, eles FALHAM — 🔴 RED)
-- **FASE 3 renomeada:** Implementation com TDD (Dev codifica até testes passarem — 🟢 GREEN + 🔵 REFACTOR)
-- **G2 renomeado:** Tests Authored (verifica que testes existem e falham)
-- **G3 renomeado:** All Tests Pass + Build Green (verifica que código fez todos os testes passarem)
-- **FASE 4 renomeada:** Verification & Acceptance (QA confirma + PO homologa)
-- **TDD loop interno:** RED → GREEN → REFACTOR por cenário Gherkin
+- TDD integrado ao ciclo SDD
 
 ### v1.0.0 (2026-06-09)
 - Documento canônico criado
-- Metodologia Maestro - Agile SDD definida
-- Valores e princípios estabelecidos
-- Quality Gates formais (G0-G5) com HITL obrigatório
-- Fura-fila com detecção proativa
-- Definition of Done formalizada
-- Papéis e responsabilidades mapeados

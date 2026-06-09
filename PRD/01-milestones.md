@@ -1,95 +1,105 @@
 # Milestones de Entrega
 
-> **Versão:** 1.0.0
+> **Versão:** 2.0.0
 > **Última atualização:** 2026-06-09
->
-> Cada milestone é implementado em um sprint. Milestones são sequenciais e cumulativos.
-> O escopo detalhado de cada milestone está em `PRD/milestones/MXX-nome.md`.
+> **MVP:** FASE 1 (M01 + M02 + M03 + M04)
 
 ---
 
 ## VISÃO GERAL DO ROADMAP
 
 ```
-M01: Fundação         M02: Catálogo        M03: Carrinho        M04: Checkout
-    [Sprint 1]           [Sprint 2]           [Sprint 3]           [Sprint 4]
-    ─────────            ─────────            ─────────            ─────────
-    • Setup              • Listagem           • Carrinho           • Stripe
-    • Tema               • Detalhe            • Quantidade         • MercadoPago
-    • Layout base        • Filtros            • Persistência       • Resumo
-    • Home page          • Categorias         • Cupom              • Confirmação
-                         • Busca                                   • E-mail
-```
+FASE 0: Discovery        FASE 1: MVP Comercial         FASE 2: Diferenciação    FASE 3: Escala
+    [M00]                    [M01-M04]                      [M05-M06]              [M07-M08]
 
-```
-M05: Autenticação    M06: Admin            M07: Perfil           M08: Pós-venda
-    [Sprint 5]           [Sprint 6]           [Sprint 7]           [Sprint 8]
-    ─────────            ─────────            ─────────            ─────────
-    • Login              • Dashboard          • Histórico          • Rastreio
-    • Cadastro           • CRUD produtos      • Endereços          • Avaliações
-    • Google OAuth       • Pedidos            • Favoritos          • Pós-venda
-    • Recuperação        • Gestão estoque                          • Devolução
+M00: Discovery          M01: Foundation           M05: Multi-Theme         M07: Growth Engine
+M01: Foundation         M02: Catalog + PDP        M06: Personalized Area   M08: Scale & Optimize
+M02: Catalog + PDP      M03: Cart + Checkout
+M03: Cart + Checkout    M04: Admin + Operations
+M04: Admin + Ops
 ```
 
 ---
 
-## LISTA DE MILESTONES
+## 🔴 FASE 0 — Discovery (M00)
 
-### 🔴 M01: Fundação do Projeto → [detalhes](milestones/M01-fundacao.md)
-**Sprint:** 1 | **Prioridade:** MUST HAVE
-**Descrição:** Setup do projeto Next.js, configuração da Vercel, Supabase, tema visual base (Tailwind + shadcn/ui), layout principal e home page estática.
-**Critério de aceitação:** Projeto rodando na Vercel com home page responsiva.
+**Objetivo:** Definir stack, refinar módulos, escolher coleções foco e SKUs iniciais.
 
-### 🟡 M02: Catálogo de Produtos → [detalhes](milestones/M02-catalogo.md)
-**Sprint:** 2 | **Prioridade:** MUST HAVE
-**Descrição:** Listagem de produtos com grid responsivo, página de detalhe com fotos, filtros por categoria/material/preço, busca textual.
-**Critério de aceitação:** Usuário navega, filtra e visualiza detalhes de produtos.
-
-### 🟡 M03: Carrinho de Compras → [detalhes](milestones/M03-carrinho.md)
-**Sprint:** 3 | **Prioridade:** MUST HAVE
-**Descrição:** Adicionar/remover itens, alterar quantidade, persistir carrinho (localStorage + DB para logado), mini-carrinho, página do carrinho, cupons de desconto.
-**Critério de aceitação:** Usuário gerencia itens e cupons no carrinho.
-
-### 🔴 M04: Checkout & Pagamento → [detalhes](milestones/M04-checkout.md)
-**Sprint:** 4 | **Prioridade:** MUST HAVE
-**Descrição:** Fluxo de checkout (endereço, frete, pagamento), integração Stripe, integração MercadoPago (Pix), resumo do pedido, página de confirmação, e-mail transacional.
-**Critério de aceitação:** Usuário finaliza compra com pagamento processado. 🎯 **MVP!**
-
-### 🟢 M05: Autenticação → [detalhes](milestones/M05-autenticacao.md)
-**Sprint:** 5 | **Prioridade:** SHOULD HAVE
-**Descrição:** Login/cadastro com e-mail, login Google OAuth, recuperação de senha, sessão persistente, zonas protegidas (admin, perfil).
-**Critério de aceitação:** Usuário cria conta, faz login e acessa áreas restritas.
-
-### 🟢 M06: Painel Admin → [detalhes](milestones/M06-admin.md)
-**Sprint:** 6 | **Prioridade:** SHOULD HAVE
-**Descrição:** Dashboard com métricas, CRUD de produtos (com upload de imagens), gestão de pedidos (status, tracking), gestão de estoque.
-**Critério de aceitação:** Admin gerencia produtos e pedidos pelo painel.
-
-### 🔵 M07: Área do Cliente → [detalhes](milestones/M07-perfil.md)
-**Sprint:** 7 | **Prioridade:** COULD HAVE
-**Descrição:** Histórico de pedidos, gerenciamento de endereços, lista de favoritos/wishlist, dados cadastrais.
-**Critério de aceitação:** Cliente acessa histórico e gerencia preferências.
-
-### 🔵 M08: Pós-venda & Fidelização → [detalhes](milestones/M08-posvenda.md)
-**Sprint:** 8 | **Prioridade:** COULD HAVE
-**Descrição:** Rastreamento de pedido, avaliações de produto (estrelas + comentários), fotos nas avaliações, programa de fidelidade simples, e-mail de abandono de carrinho.
-**Critério de aceitação:** Cliente avalia produtos e acompanha entrega.
+| # | Milestone | Descrição |
+|---|-----------|-----------|
+| M00 | Discovery | Stack, gateway, auth, 2 coleções foco, 5-10 SKUs, estratégia de preço |
 
 ---
 
-## 🚨 FURA-FILA
+## 🔴 FASE 1 — MVP Comercial (M01-M04)
 
-Milestones emergenciais ou solicitados durante sprints ativas. São priorizados acima do milestone atual quando aprovados pelo Product Owner.
+**Objetivo:** Loja funcional ponta a ponta. Usuário sai do Instagram e conclui compra.
 
-Nenhum fura-fila registrado até o momento.
-Ver pasta: `PRD/fura-fila/`
+| # | Milestone | Épicos | Descrição |
+|---|-----------|--------|-----------|
+| **M01** | Foundation | A (Foundation) | Setup, banco, auth, tema base, observabilidade |
+| **M02** | Catalog + Experience | B (Experience) + C (Commerce - Produto) | Home, LPs de coleção, catálogo, PDP, personalização simples, busca e filtros |
+| **M03** | Cart + Checkout + Customer | C (Commerce) + D (Customer) | Carrinho, checkout, pagamento, cadastro/login, perfil, pedidos |
+| **M04** | Admin + Operations | E (Operations) + F (Growth - Analytics) | Painel admin, gestão de pedidos, fila de produção, analytics inicial, Meta Pixel |
+
+---
+
+## 🟡 FASE 2 — Diferenciação de Experiência (M05-M06)
+
+| # | Milestone | Descrição |
+|---|-----------|-----------|
+| **M05** | Multi-Theme Experience | Temas múltiplos, preferência visual por cookie/perfil, conteúdo dinâmico por coleção |
+| **M06** | Personalized Customer Area | Área logada tematizada, sugestão de tema por comportamento, aprimoramento de analytics |
+
+---
+
+## 🟢 FASE 3 — Escala (M07-M08)
+
+| # | Milestone | Descrição |
+|---|-----------|-----------|
+| **M07** | Growth Engine | Automação de marketing, recomendação por comportamento, integrações com social commerce |
+| **M08** | Scale & Optimize | Melhoria da operação, recompra, otimizações de conversão, busca avançada |
+
+---
+
+## 🎯 CRITÉRIOS DE ACEITE DO MVP (FASE 1)
+
+- [ ] Usuário consegue sair do Instagram e concluir compra no site
+- [ ] Admin consegue cadastrar e publicar produtos
+- [ ] Personalização simples é salva corretamente no pedido
+- [ ] Pedido pago entra na fila de produção
+- [ ] Usuário consegue acessar histórico de pedidos
+- [ ] Preferência de tema pode ser escolhida e persistida
+- [ ] Eventos principais são rastreados
+- [ ] Fluxos principais funcionam em mobile
+
+---
+
+## 📋 BACKLOG POR ÉPICOS
+
+### Épico A — Foundation
+Setup de projeto, ambiente, banco e migrations, sistema de temas base, auth base, observabilidade.
+
+### Épico B — Experience
+Home, LPs de coleção, navegação, busca e filtros, conteúdo institucional.
+
+### Épico C — Commerce
+Produto, variante, personalização, carrinho, checkout, pagamento, pedido.
+
+### Épico D — Customer
+Cadastro/login, perfil, endereços, preferências, histórico.
+
+### Épico E — Operations
+Admin básico, gestão de pedidos, fila de produção, atualização de status, notificações.
+
+### Épico F — Growth
+Analytics, UTM, Meta Pixel, captura de lead, CTA para WhatsApp, SEO e metadados.
 
 ---
 
 ## CONVENÇÕES
 
-- **Prioridade:** 🔴 MUST HAVE → 🟡 SHOULD HAVE → 🟢 COULD HAVE → 🔵 NICE TO HAVE
-- **Cada sprint = 1 milestone** (exceto fura-fila que pode ser paralelo)
-- **Nunca se inicia um milestone antes do anterior estar concluído**
-- **Milestones são cumulativos** — M03 inclui tudo de M01+M02
-- **MVP = M01 + M02 + M03 + M04** (4 sprints)
+- **Prioridade:** 🔴 MUST HAVE → 🟡 SHOULD HAVE → 🟢 COULD HAVE
+- **Fases:** 0 (Discovery) → 1 (MVP) → 2 (Diferenciação) → 3 (Escala)
+- **MVP = M01 + M02 + M03 + M04**
+- Milestones são cumulativos e sequenciais

@@ -1,80 +1,118 @@
-# PRD — Product Requirements Document
+# PRD — E-commerce Escalável de Impressão 3D Personalizada
 
-> **Versão:** 1.0.0
-> **Criado em:** 2026-06-09
+> **Versão:** 2.0.0
+> **Status:** Refinado
 > **Product Owner:** Operador
 
 ---
 
-## VISÃO DO PRODUTO
+## 1. VISÃO DO PRODUTO
 
-### Nome do Produto
-*3DPrint Store* (nome provisório)
+Criar uma marca de e-commerce escalável de produtos impressos em 3D com foco em **experiência personalizada**, começando com aquisição via Instagram e um site próprio como hub principal de descoberta, personalização, catálogo, carrinho, conta e pagamento.
 
-### Pitch (Elevator Pitch)
-Um e-commerce especializado em itens de impressão 3D, onde clientes compram produtos prontos ou sob encomenda, com opções de personalização de cor, tamanho e material. Focado no consumidor final brasileiro, com experiência de compra fluida, pagamentos locais e logística integrada.
+A proposta combina uma **landing page principal multitemática** com **subexperiências visuais dedicadas a nichos** (gamer/energético, anime/geek, casa/utilidades, presentes personalizados, automotivo/carros antigos), mantendo uma base funcional comum para catálogo, PDP, carrinho, login, pedidos e perfil.
 
-### Problema que Resolve
-- Consumidores interessados em itens 3D não têm uma plataforma especializada e confiável para comprar
-- Criadores 3D não têm um canal de venda direto e profissional
-- Marketplaces genéricos não oferecem a experiência adequada para produtos 3D (personalização, preview 3D, prazos de produção)
-
-### Público-Alvo
-
-| Segmento | Descrição | Necessidade Principal |
-|----------|-----------|----------------------|
-| **Entusiastas de Decoração** | Pessoas que buscam itens decorativos únicos | Produtos exclusivos, personalizáveis |
-| **Hobbistas** | RPG, miniaturas, cosplay | Detalhamento, variedade de escala |
-| **Presenteadores** | Compradores de presentes criativos | Facilidade de compra, embalagem para presente |
-| **Profissionais** | Arquitetos, designers, dentistas | Peças técnicas, precisão dimensional |
-
-### Proposta de Valor
-- Catálogo curado de itens 3D de qualidade
-- Personalização em tempo real (cor, tamanho, material)
-- Preço transparente (material + produção + frete)
-- Rastreamento do pedido (produção → envio → entrega)
-- Pagamento local (Pix, boleto, cartão)
+O site vende não só produtos, mas uma **sensação de personalização e pertencimento**: nome gravado, escolha de cor/tamanho, temas visuais por nicho, presentes com significado, itens funcionais com estética forte e uma área logada que adapta a experiência ao perfil e histórico do cliente.
 
 ---
 
-## OBJETIVOS DE NEGÓCIO
+## 2. CONTEXTO ESTRATÉGICO
 
-| Objetivo | Métrica | Prazo |
-|----------|---------|-------|
-| Lançamento MVP | Loja funcional com catálogo e checkout | Sprint 4 |
-| Primeira venda | Transação completa via Stripe/MercadoPago | Sprint 4 |
-| 50 produtos | Catálogo com variedade de categorias | Sprint 6 |
-| 100 pedidos/mês | Volume de vendas | Pós-lançamento |
+- **Operação enxuta:** capacidade produtiva inicial de um parceiro com impressora 3D
+- **Frente digital:** responsável por marca, aquisição, experiência e vendas
+- **Modelo:** reduz risco de capital imobilizado, acelera validação, permite aprender sobre demanda, prazo, margem e catálogo antes da compra de impressoras próprias
+- **Canal inicial:** Instagram → site como estrutura de credibilidade, catálogo, personalização e conversão
 
 ---
 
-## MÉTRICAS DE SUCESSO
+## 3. OBJETIVOS DE NEGÓCIO
 
-| Métrica | Alvo Inicial | Alvo 6 Meses |
-|---------|-------------|--------------|
-| Taxa de conversão | ≥ 2% | ≥ 4% |
-| Abandono de carrinho | ≤ 70% | ≤ 50% |
-| Tempo até primeira compra | ≤ 3 min | ≤ 2 min |
-| NPS | ≥ 60 | ≥ 75 |
-| Recorrência | ≥ 15% | ≥ 30% |
+### Objetivo principal (90 dias)
+
+Validar demanda real, acertar precificação básica e gerar caixa suficiente para justificar a compra de uma ou mais novas impressoras 3D.
+
+### Objetivos de curto prazo
+
+- Lançar marca digital com proposta clara
+- Publicar catálogo inicial com poucos SKUs e alto apelo visual
+- Viabilizar pedidos pagos ponta a ponta
+- Capturar dados sobre conversão, margem e tempo de produção
+- Preparar base para evolução de renda extra para e-commerce escalável
+
+### Não-objetivos do MVP
+
+- Marketplace multi-vendedor
+- Aplicativo mobile nativo
+- Configurador 3D avançado em tempo real
+- ERP industrial completo
+- Catálogo grande logo no primeiro ciclo
 
 ---
 
-## RESTRIÇÕES
+## 4. PROBLEMA A RESOLVER
 
-- **Orçamento inicial:** Apenas custos de infraestrutura (Vercel free tier, Supabase free tier)
-- **Prazo MVP:** 4 sprints
-- **Idioma:** Português (Brasil) como primário, com estrutura para i18n futura
-- **Jurisdição:** Brasil (LGPD compliance desde o dia 1)
+Consumidores encontram produtos de impressão 3D vendidos como commodity, com pouca diferenciação de marca e experiência fraca de compra. Existe oportunidade para transformar esses produtos em itens com contexto, identidade temática, personalização acessível e apresentação superior.
+
+**Dores do fundador no estágio inicial:**
+- Risco de não vender
+- Risco de errar preço
+- Falta de experiência em marketing
+
+O sistema deve suportar testes rápidos, instrumentação analítica, catálogo simples, pedido com personalização controlada e forte integração com tráfego do Instagram.
 
 ---
 
-## STAKEHOLDERS
+## 5. PROPOSTA DE VALOR
 
-| Papel | Nome/Role | Contato |
-|-------|-----------|---------|
-| Product Owner | Operador | Via Scrum Master |
-| Scrum Master | Claude (AI) | Via chat |
-| Desenvolvedor | Claude Agent (fullstack-dev) | Via Scrum Master |
-| QA | Claude Agent (qa-engineer) | Via Scrum Master |
-| BA | Claude Agent (business-analyst) | Via Scrum Master |
+**Produtos impressos em 3D com personalidade, personalização acessível e experiência digital por universo.**
+
+### Elementos centrais
+
+- Catálogo temático com estética própria por nicho
+- Produtos personalizáveis sem exigir conhecimento técnico do cliente
+- Compra facilitada por site com descoberta inicial no Instagram
+- Embalagem e comunicação focadas em exclusividade
+- Área logada adaptável ao estilo preferido do cliente
+- Operação inicial leve, sob demanda e orientada por margem
+
+---
+
+## 6. PÚBLICO-ALVO
+
+### Primário
+
+- Jovens e adultos que compram por identidade, estética e presenteabilidade
+- Consumidores geek, gamer e fãs de anime
+- Pessoas que buscam itens personalizados para casa, setup ou presente
+- Usuários ativos de Instagram com afinidade por produtos criativos
+- Nichos de itens utilitários com apelo visual e personalização
+
+### Secundário
+
+- Comunidades de carros antigos e acessórios automotivos temáticos
+- Compradores de brindes personalizados
+- Consumidores de decoração funcional
+
+### ⚠️ Atenção
+
+- Nichos muito amplos podem diluir posicionamento
+- Itens inspirados em marcas/personagens famosos exigem cuidado jurídico (propriedade intelectual de terceiros)
+
+---
+
+## 7. POSICIONAMENTO INICIAL
+
+Marca **digital-first, criativa, personalizável e temática**. O diferencial **não é preço baixo** — é a combinação de estética, customização, storytelling, presenteabilidade e experiência de compra.
+
+**Princípio:** marca ampla, execução estreita. O site comporta vários universos desde o início, mas a operação comercial do MVP prioriza poucas coleções e poucos produtos.
+
+---
+
+## 8. PRINCÍPIOS DE EXECUÇÃO
+
+1. Marca ampla, execução estreita
+2. Catálogo pequeno no começo
+3. Toda decisão precisa ajudar validação de venda, preço e operação
+4. Personalização não pode inviabilizar produção
+5. Tema visual nunca pode atrapalhar checkout
+6. Instagram é o canal inicial, mas o site é a base escalável
