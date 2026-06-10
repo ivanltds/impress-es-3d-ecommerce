@@ -92,7 +92,43 @@ model ThemePreference {
   @@index([sessionId])
 }
 
-// ─── Futuros modelos (M02-M04) — placeholders para referência ───
+// ─── M02: Catalog ───
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id                     String   @id @default(cuid())
+  name                   String
+  slug                   String   @unique
+  shortDescription       String
+  longDescription        String?
+  basePrice              Float
+  comparePrice           Float?
+  categoryId             String?
+  collectionId           String?
+  productType            String   @default("simple")
+  isCustomizable         Boolean  @default(false)
+  customizationLevel     String   @default("none")
+  estimatedProductionTime Int?
+  material               String?
+  isFeatured             Boolean  @default(false)
+  images                 String[]
+  status                 String   @default("published")
+  seoTitle               String?
+  seoDescription         String?
+  legalNotes             String?
+  category               Category? @relation(fields: [categoryId], references: [id])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+// ─── Outros modelos ───
 
 model Address {
   id            String  @id @default(cuid())

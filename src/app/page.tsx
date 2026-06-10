@@ -61,7 +61,7 @@ export default function HomePage() {
         className="relative flex min-h-[85vh] flex-col items-center justify-center overflow-hidden px-4 text-center"
         data-testid="hero-section"
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent" />
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
