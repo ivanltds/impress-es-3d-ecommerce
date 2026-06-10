@@ -11,11 +11,22 @@ export interface ShippingOption {
 
 export interface StoreAddressData {
   name: string
+  phone: string
+  email: string
+  document: string  // CPF ou CNPJ sem pontuação
   street: string
   number: string
+  neighborhood: string
   city: string
-  state: string
-  cep: string // formatado: "06110-000"
+  state: string     // UF ex: "SP"
+  cep: string       // formatado: "06110-000"
+}
+
+export interface CustomerData {
+  name: string
+  phone?: string
+  email?: string
+  document?: string
 }
 
 // Suporte a sandbox: defina MELHOR_ENVIO_SANDBOX=true na Vercel se usar token de teste
@@ -196,11 +207,12 @@ export type LabelResult =
   | { success: true; tracking: string; price: number }
   | { success: false; error: string }
 
-// fromAddress: endereço de origem da loja (do BD); se omitido, usa env var de fallback
+// fromAddress: endereço de origem da loja (do BD)
+// customer: dados do destinatário para preencher campos obrigatórios da Melhor Envio
 export async function purchaseLabel(
   cep: string,
   serviceId: string,
-  toName: string,
+  customer: CustomerData,
   toAddress: string,
   toCity: string,
   fromAddress?: StoreAddressData
@@ -210,10 +222,35 @@ export async function purchaseLabel(
     return { success: false, error: 'MELHOR_ENVIO_TOKEN não configurado na Vercel' }
   }
 
-  const originName = fromAddress?.name || 'Impressao 3D'
-  const originStreet = fromAddress ? `${fromAddress.street}, ${fromAddress.number}` : 'Rua Exemplo, 123'
-  const originCity = fromAddress?.city || 'Osasco'
-  const originCep = fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
+  // ─── FROM (origem/loja) ───
+  const from = {
+    name: fromAddress?.name || 'Impressao 3D',
+    phone: (fromAddress?.phone || '').replace(/\D/g, '') || '11999999999',
+    email: fromAddress?.email || 'loja@email.com',
+    document: (fromAddress?.document || '').replace(/\D/g, '') || '00000000000',
+    address: fromAddress ? fromAddress.street : 'Rua Exemplo',
+    number: fromAddress?.number || 's/n',
+    district: fromAddress?.neighborhood || 'Centro',
+    city: fromAddress?.city || 'Osasco',
+    state_abbr: fromAddress?.state || 'SP',
+    country_id: 'BR',
+    postal_code: fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000'),
+  }
+
+  // ─── TO (destino/cliente) ───
+  const to = {
+    name: customer.name || 'Cliente',
+    phone: (customer.phone || '').replace(/\D/g, '') || '11999999999',
+    email: customer.email || 'cliente@email.com',
+    document: (customer.document || '').replace(/\D/g, '') || '00000000000',
+    address: toAddress || 'Endereco',
+    number: 's/n',
+    district: 'Centro',
+    city: toCity || 'Cidade',
+    state_abbr: 'SP',
+    country_id: 'BR',
+    postal_code: formatCep(cep),
+  }
 
   async function meErr(label: string, res: Response): Promise<string> {
     const txt = await res.text()
@@ -228,8 +265,8 @@ export async function purchaseLabel(
   try {
     // Step 1: Add to cart
     const body = {
-      from: { name: originName, address: originStreet, city: originCity, postal_code: originCep },
-      to: { name: toName, address: toAddress, city: toCity, postal_code: formatCep(cep) },
+      from,
+      to,
       service: Number(serviceId),
       products: [{ name: 'Produto 3D', quantity: 1, unitary_value: 50, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },

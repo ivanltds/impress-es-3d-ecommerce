@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getRealShippingOptions, purchaseLabel, StoreAddressData } from '@/lib/shipping'
+import { getRealShippingOptions, purchaseLabel, StoreAddressData, CustomerData } from '@/lib/shipping'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
@@ -36,15 +36,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'orderId, cep e serviceId obrigatórios' }, { status: 400 })
     }
 
-    // Fetch order for address details
+    // Fetch order + user for customer data
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { name: true, phone: true, email: true } } },
     })
     if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
 
-    // Extract destination address info
-    let toName = order.user?.name || 'Cliente'
+    // Build customer data (destinatário)
+    const customer: CustomerData = {
+      name: order.user?.name || 'Cliente',
+      phone: order.user?.phone || '',
+      email: order.user?.email || '',
+    }
+
+    // Extract destination address from order notes
     let toAddress = 'Endereco'
     let toCity = 'Cidade'
     try {
@@ -62,8 +68,12 @@ export async function POST(request: NextRequest) {
       if (addr) {
         fromAddress = {
           name: addr.name,
+          phone: addr.phone,
+          email: addr.email,
+          document: addr.document,
           street: addr.street,
           number: addr.number,
+          neighborhood: addr.neighborhood || '',
           city: addr.city,
           state: addr.state,
           cep: addr.cep,
@@ -71,10 +81,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[purchase POST] payload:', { cep, serviceId, toName, toAddress, toCity, origin: fromAddress?.name, originCep: fromAddress?.cep })
+    console.log('[purchase POST] payload:', {
+      cep, serviceId,
+      customer: customer.name,
+      origin: fromAddress?.name,
+      originCep: fromAddress?.cep,
+    })
 
-    // Purchase the label via Melhor Envio API
-    const result = await purchaseLabel(cep, serviceId, toName, toAddress, toCity, fromAddress)
+    const result = await purchaseLabel(cep, serviceId, customer, toAddress, toCity, fromAddress)
 
     if (!result.success) {
       console.error('[purchase POST] label failed:', result.error)
@@ -83,7 +97,6 @@ export async function POST(request: NextRequest) {
 
     console.log('[purchase POST] label OK:', JSON.stringify(result))
 
-    // Update order with tracking
     await prisma.order.update({
       where: { id: orderId },
       data: {

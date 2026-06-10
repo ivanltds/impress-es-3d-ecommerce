@@ -6,10 +6,13 @@ import { Plus, Pencil, Trash2, Check, X, MapPin, ToggleLeft, ToggleRight } from 
 interface StoreAddress {
   id: string
   name: string
+  phone: string
+  email: string
+  document: string
   street: string
   number: string
   complement?: string
-  neighborhood?: string
+  neighborhood: string
   city: string
   state: string
   cep: string
@@ -18,7 +21,8 @@ interface StoreAddress {
 }
 
 const EMPTY_FORM = {
-  name: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', cep: '',
+  name: '', phone: '', email: '', document: '',
+  street: '', number: '', complement: '', neighborhood: '', city: '', state: '', cep: '',
 }
 
 function formatCepDisplay(cep: string) {
@@ -57,7 +61,9 @@ export default function EnderecosPage() {
   function openEdit(addr: StoreAddress) {
     setEditingId(addr.id)
     setForm({
-      name: addr.name, street: addr.street, number: addr.number,
+      name: addr.name, phone: addr.phone || '', email: addr.email || '',
+      document: addr.document || '',
+      street: addr.street, number: addr.number,
       complement: addr.complement || '', neighborhood: addr.neighborhood || '',
       city: addr.city, state: addr.state, cep: addr.cep,
     })
@@ -74,27 +80,21 @@ export default function EnderecosPage() {
 
   async function save() {
     if (!form.name || !form.street || !form.number || !form.city || !form.state || !form.cep) {
-      setError('Preencha todos os campos obrigatórios.')
+      setError('Preencha os campos obrigatórios: nome, rua, número, cidade, UF e CEP.')
       return
     }
     setSaving(true)
     setError('')
     try {
-      if (editingId) {
-        const res = await fetch(`/api/admin/store-addresses/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
-        if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar')
-      } else {
-        const res = await fetch('/api/admin/store-addresses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
-        if (!res.ok) throw new Error((await res.json()).error || 'Erro ao criar')
-      }
+      const url = editingId ? `/api/admin/store-addresses/${editingId}` : '/api/admin/store-addresses'
+      const method = editingId ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar')
       cancel()
       await load()
     } catch (e: any) {
@@ -118,14 +118,14 @@ export default function EnderecosPage() {
     setAddresses((prev) => prev.filter((a) => a.id !== id))
   }
 
-  const field = (key: keyof typeof EMPTY_FORM, label: string, required = false, placeholder = '', className = 'col-span-2') => (
-    <div className={className}>
+  const f = (key: keyof typeof EMPTY_FORM, label: string, required = false, placeholder = '', cls = 'col-span-2') => (
+    <div className={cls}>
       <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       <input
         value={form[key]}
-        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
         placeholder={placeholder}
         className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
@@ -153,14 +153,17 @@ export default function EnderecosPage() {
         <div className="mb-6 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
           <h2 className="font-semibold mb-4 text-sm">{editingId ? 'Editar Endereço' : 'Novo Endereço'}</h2>
           <div className="grid grid-cols-2 gap-3">
-            {field('name', 'Nome / Apelido', true, 'ex: Osasco SP')}
-            {field('cep', 'CEP', true, '06110-000', 'col-span-1')}
-            {field('state', 'Estado (UF)', true, 'SP', 'col-span-1')}
-            {field('street', 'Rua', true, 'Av. Paulista')}
-            {field('number', 'Número', true, '100', 'col-span-1')}
-            {field('complement', 'Complemento', false, 'Apto 12', 'col-span-1')}
-            {field('neighborhood', 'Bairro', false, 'Centro')}
-            {field('city', 'Cidade', true, 'Osasco')}
+            {f('name', 'Nome / Apelido', true, 'ex: Osasco SP')}
+            {f('phone', 'Telefone', false, '11999999999', 'col-span-1')}
+            {f('email', 'E-mail', false, 'loja@email.com', 'col-span-1')}
+            {f('document', 'CPF / CNPJ', false, 'sem pontuação')}
+            {f('cep', 'CEP', true, '06110-000', 'col-span-1')}
+            {f('state', 'Estado (UF)', true, 'SP', 'col-span-1')}
+            {f('street', 'Rua', true, 'Av. Paulista')}
+            {f('number', 'Número', true, '100', 'col-span-1')}
+            {f('complement', 'Complemento', false, 'Apto 12', 'col-span-1')}
+            {f('neighborhood', 'Bairro', false, 'Centro')}
+            {f('city', 'Cidade', true, 'Osasco')}
           </div>
           {error && <p className="mt-3 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
           <div className="flex gap-2 mt-4">
@@ -201,14 +204,17 @@ export default function EnderecosPage() {
                     <p className="text-xs text-muted-foreground">
                       {addr.neighborhood ? `${addr.neighborhood} · ` : ''}{addr.city} / {addr.state} · CEP {formatCepDisplay(addr.cep)}
                     </p>
+                    {(addr.phone || addr.email) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {addr.phone && <span className="mr-3">{addr.phone}</span>}
+                        {addr.email && <span>{addr.email}</span>}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => toggleActive(addr)}
-                    title={addr.isActive ? 'Desativar' : 'Ativar'}
-                    className={`rounded-lg p-2 transition-colors ${addr.isActive ? 'text-green-600 hover:bg-green-100' : 'text-muted-foreground hover:bg-muted'}`}
-                  >
+                  <button onClick={() => toggleActive(addr)} title={addr.isActive ? 'Desativar' : 'Ativar'}
+                    className={`rounded-lg p-2 transition-colors ${addr.isActive ? 'text-green-600 hover:bg-green-100' : 'text-muted-foreground hover:bg-muted'}`}>
                     {addr.isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
                   </button>
                   <button onClick={() => openEdit(addr)} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">

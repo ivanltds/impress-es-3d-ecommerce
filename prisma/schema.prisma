@@ -225,12 +225,15 @@ model OrderItem {
 model StoreAddress {
   id           String   @id @default(cuid())
   name         String   // ex: "Osasco SP", "Filial RJ"
+  phone        String   @default("")  // ex: "11999999999"
+  email        String   @default("")  // ex: "loja@email.com"
+  document     String   @default("")  // CPF ou CNPJ sem pontuação
   street       String
   number       String
   complement   String?
-  neighborhood String?
+  neighborhood String   @default("")
   city         String
-  state        String
+  state        String   // UF ex: "SP"
   cep          String   // formatado: "06110-000"
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
