@@ -77,6 +77,11 @@ export default function ProducaoPage() {
 
   function handleDragStart(e: React.DragEvent, itemId: string) {
     e.dataTransfer.setData('text/plain', itemId)
+    e.dataTransfer.effectAllowed = 'move'
+    // Prevent the card from becoming transparent while dragging
+    const el = e.currentTarget as HTMLElement
+    el.style.opacity = '0.6'
+    el.addEventListener('dragend', () => { el.style.opacity = '1' }, { once: true })
   }
 
   function handleDrop(e: React.DragEvent, status: Status) {
