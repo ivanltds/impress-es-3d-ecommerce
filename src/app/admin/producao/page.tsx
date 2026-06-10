@@ -46,6 +46,10 @@ export default function ProducaoPage() {
   const [shippingForm, setShippingForm] = useState<KanbanItem | null>(null)
   const [trackingCode, setTrackingCode] = useState('')
   const [carrier, setCarrier] = useState('Correios')
+  const [shippingCep, setShippingCep] = useState('')
+  const [shippingServices, setShippingServices] = useState<Array<{ id: number; name: string; price: number; days: number }>>([])
+  const [selectedService, setSelectedService] = useState<number>(0)
+  const [purchasing, setPurchasing] = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/production')
@@ -58,7 +62,15 @@ export default function ProducaoPage() {
     if (toStatus === 'shipped') {
       // Open shipping modal instead of directly moving
       const item = items.find((i) => i.id === itemId)
-      if (item) { setShippingForm(item); setTrackingCode(''); setCarrier('Correios') }
+      if (item) {
+        setShippingForm(item)
+        setTrackingCode('')
+        setCarrier('Correios')
+        setShippingCep('')
+        setShippingServices([])
+        setSelectedService(0)
+        // Fetch shipping options if we have a CEP
+      }
       return
     }
     setItems((prev) =>
@@ -71,9 +83,38 @@ export default function ProducaoPage() {
     })
   }, [items])
 
+  async function fetchServices(cep: string) {
+    const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}`)
+    if (res.ok) {
+      const data = await res.json()
+      setShippingServices(data)
+    }
+  }
+
   async function confirmShipping() {
     if (!shippingForm) return
+    setPurchasing(true)
     const itemId = shippingForm.id
+
+    if (selectedService > 0 && shippingCep) {
+      // Purchase label via Melhor Envio
+      const res = await fetch('/api/admin/shipping/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: shippingForm.orderId, cep: shippingCep, serviceId: selectedService }),
+      })
+      const data = await res.json()
+      if (data.success && data.label) {
+        setItems((prev) =>
+          prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i))
+        )
+        setShippingForm(null)
+        setPurchasing(false)
+        return
+      }
+    }
+
+    // Fallback: manual tracking code
     setItems((prev) =>
       prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i))
     )
@@ -83,6 +124,7 @@ export default function ProducaoPage() {
       body: JSON.stringify({ itemId, status: 'shipped', notes: `${carrier}: ${trackingCode}` }),
     })
     setShippingForm(null)
+    setPurchasing(false)
   }
 
   function handleDragStart(e: React.DragEvent, itemId: string) {
@@ -168,18 +210,48 @@ export default function ProducaoPage() {
               <p className="text-sm"><strong>Pedido:</strong> {shippingForm.orderNumber}</p>
               <p className="text-sm"><strong>Cliente:</strong> {shippingForm.customerName}</p>
               <p className="text-sm"><strong>Produto:</strong> {shippingForm.productNameSnapshot} x{shippingForm.qty}</p>
-              <div>
-                <label className="block text-xs font-medium mt-3">Transportadora</label>
-                <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
-                  <option>Correios</option><option>Jadlog</option><option>Azul Cargo</option><option>Loggi</option><option>Outra</option>
-                </select>
+
+              <div className="border-t pt-3">
+                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">CEP de Entrega</label>
+                <div className="flex gap-2">
+                  <input value={shippingCep} onChange={(e) => setShippingCep(e.target.value)} placeholder="01001000" className="flex-1 rounded-lg border px-3 py-2 text-sm" />
+                  <button type="button" onClick={() => fetchServices(shippingCep)} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Calcular</button>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium">Código de Rastreio</label>
-                <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="PN123456789BR" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+
+              {shippingServices.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Serviço</label>
+                  {shippingServices.map((s) => (
+                    <button key={s.id} type="button" onClick={() => setSelectedService(s.id)}
+                      className={`flex w-full items-center justify-between rounded-lg border p-2 text-sm mt-1 ${selectedService === s.id ? 'border-primary bg-primary/5' : ''}`}>
+                      <span>{s.name} — até {s.days} dias</span>
+                      <span className="font-semibold">R$ {s.price.toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="border-t pt-3">
+                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Ou registro manual</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-muted-foreground">Transportadora</label>
+                    <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                      <option>Correios</option><option>Jadlog</option><option>Azul Cargo</option><option>Loggi</option><option>Outra</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground">Rastreio</label>
+                    <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="PN123456789BR" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+                  </div>
+                </div>
               </div>
+
               <div className="flex gap-2 pt-3">
-                <button onClick={confirmShipping} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground">Confirmar Envio</button>
+                <button onClick={confirmShipping} disabled={purchasing} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {purchasing ? 'Comprando...' : selectedService > 0 ? 'Comprar Etiqueta' : 'Confirmar Envio'}
+                </button>
                 <button onClick={() => setShippingForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>
               </div>
             </div>
