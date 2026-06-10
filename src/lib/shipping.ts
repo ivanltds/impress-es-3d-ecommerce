@@ -9,7 +9,10 @@ export interface ShippingOption {
   days: number
 }
 
-const MELHOR_ENVIO_URL = 'https://melhorenvio.com.br/api/v2'
+// Suporte a sandbox: defina MELHOR_ENVIO_SANDBOX=true na Vercel se usar token de teste
+const MELHOR_ENVIO_URL = process.env.MELHOR_ENVIO_SANDBOX === 'true'
+  ? 'https://sandbox.melhorenvio.com.br/api/v2'
+  : 'https://melhorenvio.com.br/api/v2'
 const FROM_CEP = '06110000'
 const FROM_CEP_FORMATTED = '06110-000' // Osasco/SP — com traço para API de compra
 
