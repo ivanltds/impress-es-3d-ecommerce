@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── F3: Banco de Dados (cenários 3.1, 3.2, 3.3) ───
+// ─── F4: Autenticação (cenários 4.1 a 4.8) ───
+
+model User {
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String?   @unique
+  emailVerified       DateTime?
+  passwordHash        String?   // hashed password (NextAuth handles via adapter)
+  image               String?
+  phone               String?
+  role                String    @default("customer") // admin, operator, partner, customer
+  marketingConsent    Boolean   @default(false)
+  preferredTheme      String?   // theme_key
+  preferredCollection String?   // collection slug
+  status              String    @default("active") // active, inactive, banned
+
+  // ─── F4.8: Sessão persistente ───
+  accounts            Account[]
+  sessions            Session[]
+
+  // ─── Relacionamentos futuros (M02+) ───
+  themePreferences    ThemePreference[]
+  addresses           Address[]
+  orders              Order[]
+  cart                Cart?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// ─── NextAuth.js models ───
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── F5: Tema (cenários 5.1 a 5.8) ───
+
+model ThemePreference {
+  id        String   @id @default(cuid())
+  userId    String?  // nullable: guest users use session_id
+  sessionId String?  // for non-logged-in users
+  themeKey  String   // core, gamer, anime, home, gifts, auto
+  source    String   @default("manual") // manual, suggested, default
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lastUpdated DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+// ─── Futuros modelos (M02-M04) — placeholders para referência ───
+
+model Address {
+  id            String  @id @default(cuid())
+  userId        String
+  label         String  // Casa, Trabalho
+  recipientName String
+  cep           String
+  street        String
+  number        String
+  complement    String?
+  district      String
+  city          String
+  state         String
+  country       String  @default("Brasil")
+  isDefault     Boolean @default(false)
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  sessionId String
+  status    String     @default("active") // active, converted, abandoned
+  user      User?      @relation(fields: [userId], references: [id])
+  items     CartItem[]
+}
+
+model CartItem {
+  id                   String  @id @default(cuid())
+  cartId               String
+  productId            String
+  variantId            String?
+  qty                  Int
+  unitPrice            Float
+  customizationPayload String? // JSON
+  lineTotal            Float
+  cart                 Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id               String    @id @default(cuid())
+  userId           String?
+  orderNumber      String    @unique
+  status           String    @default("created")
+  paymentStatus    String    @default("pending")
+  fulfillmentStatus String   @default("unfulfilled")
+  subtotal         Float
+  shippingCost     Float     @default(0)
+  discount         Float     @default(0)
+  total            Float
+  currency         String    @default("BRL")
+  sourceChannel    String?
+  notes            String?
+  themeSnapshot    String?
+  user             User?     @relation(fields: [userId], references: [id])
+  items            OrderItem[]
+  createdAt        DateTime  @default(now())
+}
+
+model OrderItem {
+  id                     String   @id @default(cuid())
+  orderId                String
+  productId              String
+  productNameSnapshot    String
+  skuSnapshot            String
+  qty                    Int
+  unitPrice              Float
+  customizationSnapshot  String?  // JSON
+  productionStatus       String   @default("pending")
+  productionNotes        String?
+  order                  Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}

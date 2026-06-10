@@ -1,0 +1,9 @@
+// ─── Placeholder — M02 Catalog ───
+export default function ProdutosPage() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+      <h1 className="font-heading text-3xl font-bold">Produtos</h1>
+      <p className="mt-2 text-muted-foreground">Catálogo completo em breve.</p>
+    </div>
+  )
+}

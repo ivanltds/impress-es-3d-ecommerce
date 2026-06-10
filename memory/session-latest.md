@@ -2,57 +2,43 @@
 
 > **Metodologia:** Maestro - Agile SDD com TDD v2.0.0
 > **Data da última iteração:** 2026-06-09
-> **Fase atual:** FASE 0 — Specification (M01)
 > **Milestone ativo:** M01 — Foundation (Épico A)
-> **Gate pendente:** 🚧 G0 (Spec Approved)
+> **Fase atual:** FASE 3 — Implementation concluída → FASE 4 — Verification
 
 ---
 
-## M00 — DISCOVERY ✅ CONCLUÍDO
+## GATES
 
-Todas as 10 decisões foram resolvidas:
-
-| # | Decisão | Resolução |
-|---|---------|-----------|
-| 1 | Stack | Next.js 14+ App Router |
-| 2 | Gateway | Stripe + MercadoPago |
-| 3 | Frete | Calculado via Correios |
-| 4 | CMS | Interno (admin próprio) |
-| 5 | PDP | Página dedicada com drawer no mobile |
-| 6 | IP | Catálogo 100% original + política de revisão no admin |
-| 7 | Coleções MVP | 5 (Gamer, Anime, Casa, Presentes, Auto) |
-| 8 | SKUs | 6 famílias (porta-lata, chaveiros, abajur, organizador, geek, auto) |
-| 9 | Margem | Parametrizável em tela de gestão (campo `cost_estimate`, futuro) |
-| 10 | Consulta | Formulário + WhatsApp integrado |
+| Gate | Status |
+|------|--------|
+| 🚧 G0 | ✅ Spec Approved |
+| 🚧 G1 | ✅ Architecture Approved |
+| 🚧 G2 | ✅ Tests Authored (29 testes: 25 E2E + 4 unitários) |
+| 🚧 G3 | ✅ All Tests Pass + Build Green (25/25 E2E, 4/4 unitários, build verde) |
+| 🚧 G4 | ⬜ Verification (deploy preview) |
+| 🚧 G5 | ⬜ Deploy Approved (Product Owner) |
+| 🚧 G6 | ⬜ Retrospective |
 
 ---
 
-## M01 — FOUNDATION (Épico A)
+## O QUE FOI ENTREGUE NO M01
 
-**Objetivo:** Setup, banco, auth, tema base, layout, home page, observabilidade.
-
-### Histórias previstas (8)
-
-| US | Descrição |
-|----|-----------|
-| M01-01 | Setup Next.js + TypeScript + Tailwind + shadcn/ui |
-| M01-02 | Deploy na Vercel com preview automático |
-| M01-03 | Banco Supabase + Prisma + migration inicial |
-| M01-04 | Auth base (NextAuth.js v5, e-mail+senha, roles) |
-| M01-05 | Tema Core/Default (design tokens, ThemeProvider) |
-| M01-06 | Layout principal (Header, Footer, nav, responsivo) |
-| M01-07 | Home page (hero, coleções placeholder, destaques, SEO) |
-| M01-08 | Observabilidade (logging, error tracking, health check) |
+- ✅ Next.js 14+ App Router, TypeScript strict, Tailwind, shadcn/ui
+- ✅ Deploy configurado para Vercel
+- ✅ Banco Supabase local (Docker) + Prisma 5.22 + migration
+- ✅ Auth: cadastro, login, logout (NextAuth v5, e-mail+senha, roles)
+- ✅ Tema Core com modo claro/escuro + toggle + cookie
+- ✅ Layout responsivo (375/768/1280): Header, Footer, nav mobile
+- ✅ Home Page: hero, 5 coleções, como funciona, destaques, WhatsApp CTA
+- ✅ Health check (/api/health)
+- ✅ 29 testes automatizados (25 E2E Playwright + 4 unitários Vitest)
+- ✅ Build verde, lint verde
 
 ---
 
 ## PRÓXIMO PASSO
 
-Acionar **Business Analyst** para escrever a especificação Gherkin formal do M01.
-O BA vai transformar as 8 histórias em cenários DADO/QUANDO/ENTÃO testáveis.
-
----
-
-## DECISÕES PENDENTES
-
-Nenhuma. M00 completo.
+G3 é automático (build + testes já passam). Avançar para FASE 4 (Verification) e FASE 5 (Acceptance):
+1. Fazer deploy na Vercel (projeto: impress-es-3d-ecommerce)
+2. QA confirma no deploy preview
+3. Product Owner homologa
