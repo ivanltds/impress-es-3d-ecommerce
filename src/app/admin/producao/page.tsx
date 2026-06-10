@@ -60,16 +60,18 @@ export default function ProducaoPage() {
 
   const moveItem = useCallback(async (itemId: string, toStatus: Status) => {
     if (toStatus === 'shipped') {
-      // Open shipping modal instead of directly moving
+      // Open shipping modal — auto-fetch services from order
       const item = items.find((i) => i.id === itemId)
       if (item) {
         setShippingForm(item)
         setTrackingCode('')
         setCarrier('Correios')
-        setShippingCep('')
         setShippingServices([])
         setSelectedService(0)
-        // Fetch shipping options if we have a CEP
+        // Fetch order to get CEP from notes
+        const orderCep = (item as any).cep || ''
+        setShippingCep(orderCep)
+        if (orderCep) fetchServices(orderCep)
       }
       return
     }

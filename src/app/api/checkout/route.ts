@@ -34,6 +34,9 @@ export async function POST(request: NextRequest) {
     // Capture UTM from cookies/referrer
     const sourceChannel = request.headers.get('referer')?.includes('instagram') ? 'instagram' : 'direct'
 
+    // Store address as JSON in notes for shipping reference
+    const addressNotes = JSON.stringify({ cep, street, number, district, city, state })
+
     const order = await prisma.order.create({
       data: {
         userId,
@@ -46,6 +49,7 @@ export async function POST(request: NextRequest) {
         total,
         currency: 'BRL',
         sourceChannel,
+        notes: addressNotes,
         items: {
           create: items.map((i: { productId: string; name: string; sku?: string; qty: number; price: number }) => ({
             productId: i.productId,
