@@ -43,6 +43,9 @@ export default function ProducaoPage() {
   const [selected, setSelected] = useState<KanbanItem | null>(null)
   const [dragOver, setDragOver] = useState<Status | null>(null)
   const [loading, setLoading] = useState(true)
+  const [shippingForm, setShippingForm] = useState<KanbanItem | null>(null)
+  const [trackingCode, setTrackingCode] = useState('')
+  const [carrier, setCarrier] = useState('Correios')
 
   useEffect(() => {
     fetch('/api/admin/production')
@@ -52,6 +55,12 @@ export default function ProducaoPage() {
   }, [])
 
   const moveItem = useCallback(async (itemId: string, toStatus: Status) => {
+    if (toStatus === 'shipped') {
+      // Open shipping modal instead of directly moving
+      const item = items.find((i) => i.id === itemId)
+      if (item) { setShippingForm(item); setTrackingCode(''); setCarrier('Correios') }
+      return
+    }
     setItems((prev) =>
       prev.map((i) => (i.id === itemId ? { ...i, productionStatus: toStatus } : i))
     )
@@ -60,7 +69,21 @@ export default function ProducaoPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId, status: toStatus }),
     })
-  }, [])
+  }, [items])
+
+  async function confirmShipping() {
+    if (!shippingForm) return
+    const itemId = shippingForm.id
+    setItems((prev) =>
+      prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i))
+    )
+    await fetch('/api/admin/production', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, status: 'shipped', notes: `${carrier}: ${trackingCode}` }),
+    })
+    setShippingForm(null)
+  }
 
   function handleDragStart(e: React.DragEvent, itemId: string) {
     e.dataTransfer.setData('text/plain', itemId)
@@ -132,6 +155,37 @@ export default function ProducaoPage() {
           )
         })}
       </div>
+
+      {/* Shipping Registration Modal */}
+      {shippingForm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50" onClick={() => setShippingForm(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading text-lg font-bold">Registrar Envio</h3>
+              <button onClick={() => setShippingForm(null)} className="rounded-lg p-2 hover:bg-muted"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="mt-4 space-y-3">
+              <p className="text-sm"><strong>Pedido:</strong> {shippingForm.orderNumber}</p>
+              <p className="text-sm"><strong>Cliente:</strong> {shippingForm.customerName}</p>
+              <p className="text-sm"><strong>Produto:</strong> {shippingForm.productNameSnapshot} x{shippingForm.qty}</p>
+              <div>
+                <label className="block text-xs font-medium mt-3">Transportadora</label>
+                <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+                  <option>Correios</option><option>Jadlog</option><option>Azul Cargo</option><option>Loggi</option><option>Outra</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium">Código de Rastreio</label>
+                <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="PN123456789BR" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+              </div>
+              <div className="flex gap-2 pt-3">
+                <button onClick={confirmShipping} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground">Confirmar Envio</button>
+                <button onClick={() => setShippingForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelected(null)}>
