@@ -39,7 +39,7 @@ async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
   try {
     // Calcular frete
     const body = {
-      from: { postal_code: FROM_CEP },
+      from: { postal_code: FROM_CEP_FORMATTED },
       to: { postal_code: cep.replace(/\D/g, '') },
       products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
       options: { receipt: false, own_hand: false },
@@ -131,7 +131,7 @@ export async function getRealShippingOptions(cep: string): Promise<ShippingOptio
   try {
     const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
     const body = {
-      from: { postal_code: FROM_CEP },
+      from: { postal_code: FROM_CEP_FORMATTED },
       to: { postal_code: cep.replace(/\D/g, '') },
       products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
       options: { receipt: false, own_hand: false },
