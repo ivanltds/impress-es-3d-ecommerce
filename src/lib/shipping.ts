@@ -107,6 +107,66 @@ function fallbackShipping(cep: string): ShippingOption[] {
 }
 
 export async function calculateShipping(cep: string): Promise<ShippingOption[]> {
-  // Tenta API real primeiro, fallback se falhar
   return fetchMelhorEnvio(cep)
+}
+
+// ─── Label Purchase ───
+export async function purchaseLabel(cep: string, serviceId: string): Promise<{ tracking: string; price: number } | null> {
+  const token = process.env.MELHOR_ENVIO_TOKEN
+  if (!token) {
+    console.warn('[shipping] MELHOR_ENVIO_TOKEN not set — cannot purchase label')
+    return null
+  }
+
+  try {
+    // Step 1: Add to cart
+    const body = {
+      from: { postal_code: FROM_CEP },
+      to: { postal_code: cep.replace(/\D/g, '') },
+      service: Number(serviceId),
+      products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
+      options: { receipt: false, own_hand: false, insurance_value: 0 },
+    }
+
+    const cartRes = await fetch(`${MELHOR_ENVIO_URL}/me/cart`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
+    if (!cartRes.ok) { console.error('[shipping] Cart error:', await cartRes.text()); return null }
+    const cart = await cartRes.json()
+    const cartId = cart.id
+    if (!cartId) return null
+
+    // Step 2: Checkout
+    const checkoutRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/checkout`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ orders: [cartId] }),
+    })
+    if (!checkoutRes.ok) { console.error('[shipping] Checkout error:', await checkoutRes.text()); return null }
+    const checkout = await checkoutRes.json()
+
+    // Step 3: Generate label
+    const orderId = checkout?.purchase?.orders?.[0]?.id || checkout?.orders?.[0]?.id
+    if (!orderId) { console.error('[shipping] No order ID in checkout response'); return null }
+
+    const genRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/generate`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ orders: [orderId] }),
+    })
+    if (!genRes.ok) { console.error('[shipping] Generate error:', await genRes.text()); return null }
+    const genData = await genRes.json()
+    const label = Array.isArray(genData) ? genData[0] : genData
+    if (!label) return null
+
+    return {
+      tracking: label.tracking || '',
+      price: label.price || 0,
+    }
+  } catch (err) {
+    console.error('[shipping] Label purchase failed:', err)
+    return null
+  }
 }

@@ -31,6 +31,7 @@ export default function ProducaoPage() {
   const [shippingCep, setShippingCep] = useState('')
   const [shippingServices, setShippingServices] = useState<Array<{ id: number; name: string; price: number; days: number }>>([])
   const [selectedService, setSelectedService] = useState<number>(0)
+  const [selectedServicePrice, setSelectedServicePrice] = useState<number>(0)
   const [purchasing, setPurchasing] = useState(false)
   const [servicesError, setServicesError] = useState('')
 
@@ -47,14 +48,14 @@ export default function ProducaoPage() {
     try {
       const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}`)
       const data = await res.json()
-      if (res.ok) {
-        if (Array.isArray(data) && data.length > 0) {
-          setShippingServices(data)
-        } else {
-          setServicesError('Nenhum serviço disponível para este CEP. Verifique o token Melhor Envio.')
-        }
+      if (res.ok && Array.isArray(data) && data.length > 0) {
+        setShippingServices(data)
+        // Auto-select cheapest option
+        const cheapest = data.reduce((a: any, b: any) => (a.price < b.price ? a : b))
+        setSelectedService(cheapest.id)
+        setSelectedServicePrice(cheapest.price)
       } else {
-        setServicesError(data.error || 'Erro ao consultar serviços de frete')
+        setServicesError(data.error || 'Nenhum serviço disponível. Verifique o token Melhor Envio na Vercel.')
       }
     } catch {
       setServicesError('Erro de conexão ao consultar frete')
@@ -88,18 +89,23 @@ export default function ProducaoPage() {
   }
 
   async function confirmShipping() {
-    if (!shippingForm) return
+    if (!shippingForm || !selectedService || !shippingCep) return
     setPurchasing(true)
     const itemId = shippingForm.id
-    // Register tracking on the order
-    await fetch('/api/admin/shipping/purchase', {
+    // Purchase label via Melhor Envio API
+    const res = await fetch('/api/admin/shipping/purchase', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId: shippingForm.orderId, trackingCode, carrier }),
+      body: JSON.stringify({ orderId: shippingForm.orderId, cep: shippingCep, serviceId: String(selectedService) }),
     })
-    // Move item to shipped in production
-    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i)))
-    await fetch('/api/admin/production', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemId, status: 'shipped', notes: `${carrier}: ${trackingCode}` }) })
+    const data = await res.json()
+    if (data.success) {
+      // Move item to shipped
+      setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i)))
+      await fetch('/api/admin/production', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemId, status: 'shipped', notes: `Etiqueta: ${data.tracking}` }) })
+    } else {
+      setServicesError(data.error || 'Falha ao comprar etiqueta')
+    }
     setShippingForm(null); setPurchasing(false)
   }
 
@@ -171,28 +177,26 @@ export default function ProducaoPage() {
                 </div>
               </div>
               {shippingServices.length > 0 && (
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Serviço disponível</label>
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                  <p className="text-xs font-semibold text-green-800">Serviço selecionado</p>
                   {shippingServices.map((s) => (
-                    <button key={s.id} type="button" onClick={() => setSelectedService(s.id)}
-                      className={`flex w-full items-center justify-between rounded-lg border p-2 text-sm mt-1 ${selectedService === s.id ? 'border-primary bg-primary/5' : ''}`}>
-                      <span>{s.name} — até {s.days} dias</span><span className="font-semibold">R$ {s.price.toFixed(2)}</span>
-                    </button>
+                    <label key={s.id} className={`flex items-center justify-between mt-2 p-2 rounded-lg cursor-pointer text-sm ${selectedService === s.id ? 'bg-white border border-primary' : ''}`}>
+                      <div className="flex items-center gap-2">
+                        <input type="radio" name="service" checked={selectedService === s.id} onChange={() => { setSelectedService(s.id); setSelectedServicePrice(s.price) }} />
+                        <span>{s.name} — até {s.days} dias</span>
+                      </div>
+                      <span className="font-semibold">R$ {s.price.toFixed(2)}</span>
+                    </label>
                   ))}
                 </div>
               )}
               {servicesError && (
                 <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-3">{servicesError}</p>
               )}
-              <div className="border-t pt-3">
-                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Ou registro manual</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-muted-foreground">Transportadora</label><select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"><option>Correios</option><option>Jadlog</option><option>Azul Cargo</option><option>Loggi</option><option>Outra</option></select></div>
-                  <div><label className="block text-xs text-muted-foreground">Rastreio</label><input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="PN123456789BR" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
-                </div>
-              </div>
               <div className="flex gap-2 pt-3">
-                <button onClick={confirmShipping} disabled={purchasing} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{purchasing ? 'Registrando...' : 'Confirmar Envio'}</button>
+                <button onClick={confirmShipping} disabled={purchasing || !selectedService} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  {purchasing ? 'Comprando etiqueta...' : selectedService > 0 ? `Comprar Etiqueta — R$ ${selectedServicePrice.toFixed(2)}` : 'Selecione um serviço'}
+                </button>
                 <button onClick={() => setShippingForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>
               </div>
             </div>
