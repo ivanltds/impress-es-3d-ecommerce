@@ -11,7 +11,7 @@ export async function GET() {
   const orders = await prisma.order.findMany({
     where: {
       paymentStatus: 'paid',
-      fulfillmentStatus: { in: ['shipped', 'delivered'] },
+      fulfillmentStatus: { in: ['shipped', 'posted', 'in_transit', 'delivered'] },
     },
     orderBy: { createdAt: 'desc' },
     include: { items: true, user: { select: { name: true } } },
@@ -20,7 +20,8 @@ export async function GET() {
   const shipments = orders.map((o) => {
     // Map fulfillmentStatus to shipping kanban column
     const shippingStatus =
-      o.fulfillmentStatus === 'delivered' ? 'delivered' : 'posted'
+      o.fulfillmentStatus === 'delivered' ? 'delivered' :
+      o.fulfillmentStatus === 'in_transit' ? 'in_transit' : 'posted'
     return {
       id: o.id,
       orderId: o.id,
@@ -41,17 +42,10 @@ export async function PATCH(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id, status } = await req.json()
 
-  // Map shipping kanban columns to DB fulfillmentStatus
-  const statusMap: Record<string, string> = {
-    posted: 'shipped',
-    in_transit: 'shipped',
-    delivered: 'delivered',
-  }
-  const dbStatus = statusMap[status] || 'shipped'
-
+  // Map shipping kanban columns directly to DB
   await prisma.order.update({
     where: { id },
-    data: { fulfillmentStatus: dbStatus },
+    data: { fulfillmentStatus: status },
   })
 
   return NextResponse.json({ success: true })

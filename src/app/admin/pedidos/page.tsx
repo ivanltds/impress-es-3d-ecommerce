@@ -16,7 +16,8 @@ interface Order {
 
 const STATUS_LABELS: Record<string, string> = { paid: 'Pago', pending: 'Pendente', refunded: 'Reembolsado', failed: 'Falhou' }
 const FULFILLMENT_LABELS: Record<string, string> = {
-  unfulfilled: 'Não atendido', in_progress: 'Em produção', shipped: 'Enviado', delivered: 'Entregue',
+  unfulfilled: 'Não atendido', in_progress: 'Em produção',
+  shipped: 'Enviado', posted: 'Postado', in_transit: 'Em trânsito', delivered: 'Entregue',
 }
 
 export default function AdminPedidosPage() {

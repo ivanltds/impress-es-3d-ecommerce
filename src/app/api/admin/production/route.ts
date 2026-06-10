@@ -11,7 +11,7 @@ export async function GET() {
   const orders = await prisma.order.findMany({
     where: {
       paymentStatus: 'paid',
-      fulfillmentStatus: { notIn: ['shipped', 'delivered'] }, // not in shipping yet
+      fulfillmentStatus: { notIn: ['shipped', 'posted', 'in_transit', 'delivered'] }, // not in shipping yet
     },
     orderBy: { createdAt: 'desc' },
     include: {
