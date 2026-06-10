@@ -192,6 +192,10 @@ export async function getRealShippingOptions(cep: string, fromCep?: string): Pro
 }
 
 // ─── Label Purchase ───
+export type LabelResult =
+  | { success: true; tracking: string; price: number }
+  | { success: false; error: string }
+
 // fromAddress: endereço de origem da loja (do BD); se omitido, usa env var de fallback
 export async function purchaseLabel(
   cep: string,
@@ -200,17 +204,26 @@ export async function purchaseLabel(
   toAddress: string,
   toCity: string,
   fromAddress?: StoreAddressData
-): Promise<{ tracking: string; price: number } | null> {
+): Promise<LabelResult> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   if (!token) {
-    console.warn('[shipping] MELHOR_ENVIO_TOKEN not set — cannot purchase label')
-    return null
+    return { success: false, error: 'MELHOR_ENVIO_TOKEN não configurado na Vercel' }
   }
 
   const originName = fromAddress?.name || 'Impressao 3D'
   const originStreet = fromAddress ? `${fromAddress.street}, ${fromAddress.number}` : 'Rua Exemplo, 123'
   const originCity = fromAddress?.city || 'Osasco'
   const originCep = fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
+
+  async function meErr(label: string, res: Response): Promise<string> {
+    const txt = await res.text()
+    console.error(`[shipping] ${label} HTTP ${res.status}:`, txt.slice(0, 400))
+    try {
+      const j = JSON.parse(txt)
+      const first = j.errors ? Object.values(j.errors as Record<string, string[]>).flat()[0] : j.message
+      return first ? `${label}: ${first}` : `${label}: HTTP ${res.status}`
+    } catch { return `${label}: HTTP ${res.status}` }
+  }
 
   try {
     // Step 1: Add to cart
@@ -221,16 +234,17 @@ export async function purchaseLabel(
       products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },
     }
+    console.log('[shipping] cart body:', JSON.stringify({ from: body.from, to: body.to, service: body.service }))
 
     const cartRes = await fetch(`${MELHOR_ENVIO_URL}/me/cart`, {
       method: 'POST',
       headers: meHeaders(token),
       body: JSON.stringify(body),
     })
-    if (!cartRes.ok) { console.error('[shipping] Cart error:', await cartRes.text()); return null }
+    if (!cartRes.ok) return { success: false, error: await meErr('Cart', cartRes) }
     const cart = await cartRes.json()
     const cartId = cart.id
-    if (!cartId) return null
+    if (!cartId) return { success: false, error: `Cart: sem ID na resposta — ${JSON.stringify(cart).slice(0, 200)}` }
 
     // Step 2: Checkout
     const checkoutRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/checkout`, {
@@ -238,30 +252,27 @@ export async function purchaseLabel(
       headers: meHeaders(token),
       body: JSON.stringify({ orders: [cartId] }),
     })
-    if (!checkoutRes.ok) { console.error('[shipping] Checkout error:', await checkoutRes.text()); return null }
+    if (!checkoutRes.ok) return { success: false, error: await meErr('Checkout', checkoutRes) }
     const checkout = await checkoutRes.json()
+    console.log('[shipping] checkout:', JSON.stringify(checkout).slice(0, 400))
+
+    const meOrderId = checkout?.purchase?.orders?.[0]?.id || checkout?.orders?.[0]?.id
+    if (!meOrderId) return { success: false, error: `Checkout: sem order ID — ${JSON.stringify(checkout).slice(0, 200)}` }
 
     // Step 3: Generate label
-    console.log('[shipping] Checkout response:', JSON.stringify(checkout).slice(0, 500))
-    const orderId = checkout?.purchase?.orders?.[0]?.id || checkout?.orders?.[0]?.id
-    if (!orderId) { console.error('[shipping] No order ID in checkout. Full response:', JSON.stringify(checkout)); return null }
-
     const genRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/generate`, {
       method: 'POST',
       headers: meHeaders(token),
-      body: JSON.stringify({ orders: [orderId] }),
+      body: JSON.stringify({ orders: [meOrderId] }),
     })
-    if (!genRes.ok) { console.error('[shipping] Generate error:', await genRes.text()); return null }
+    if (!genRes.ok) return { success: false, error: await meErr('Generate', genRes) }
     const genData = await genRes.json()
     const label = Array.isArray(genData) ? genData[0] : genData
-    if (!label) return null
+    if (!label) return { success: false, error: 'Generate: resposta vazia' }
 
-    return {
-      tracking: label.tracking || '',
-      price: label.price || 0,
-    }
-  } catch (err) {
-    console.error('[shipping] Label purchase failed:', err)
-    return null
+    return { success: true, tracking: label.tracking || '', price: label.price || 0 }
+  } catch (err: any) {
+    console.error('[shipping] purchaseLabel exception:', err)
+    return { success: false, error: err.message || 'Erro inesperado ao comprar etiqueta' }
   }
 }

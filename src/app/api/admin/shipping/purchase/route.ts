@@ -29,63 +29,73 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { orderId, cep, serviceId, addressId } = await request.json()
-  if (!orderId || !cep || !serviceId) return NextResponse.json({ error: 'orderId, cep e serviceId obrigatórios' }, { status: 400 })
 
-  // Fetch order for address details
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { user: { select: { name: true } } },
-  })
-  if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
-
-  // Extract destination address info
-  let toName = order.user?.name || 'Cliente'
-  let toAddress = 'Endereco'
-  let toCity = 'Cidade'
   try {
-    if (order.notes) {
-      const addr = JSON.parse(order.notes)
-      toAddress = [addr.street, addr.number].filter(Boolean).join(', ') || 'Endereco'
-      toCity = addr.city || 'Cidade'
+    const { orderId, cep, serviceId, addressId } = await request.json()
+    if (!orderId || !cep || !serviceId) {
+      return NextResponse.json({ error: 'orderId, cep e serviceId obrigatórios' }, { status: 400 })
     }
-  } catch {}
 
-  // Fetch origin store address from DB
-  let fromAddress: StoreAddressData | undefined
-  if (addressId) {
-    const addr = await prisma.storeAddress.findUnique({ where: { id: addressId } })
-    if (addr) {
-      fromAddress = {
-        name: addr.name,
-        street: addr.street,
-        number: addr.number,
-        city: addr.city,
-        state: addr.state,
-        cep: addr.cep,
+    // Fetch order for address details
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: { select: { name: true } } },
+    })
+    if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
+
+    // Extract destination address info
+    let toName = order.user?.name || 'Cliente'
+    let toAddress = 'Endereco'
+    let toCity = 'Cidade'
+    try {
+      if (order.notes) {
+        const addr = JSON.parse(order.notes)
+        toAddress = [addr.street, addr.number].filter(Boolean).join(', ') || 'Endereco'
+        toCity = addr.city || 'Cidade'
+      }
+    } catch {}
+
+    // Fetch origin store address from DB
+    let fromAddress: StoreAddressData | undefined
+    if (addressId) {
+      const addr = await prisma.storeAddress.findUnique({ where: { id: addressId } })
+      if (addr) {
+        fromAddress = {
+          name: addr.name,
+          street: addr.street,
+          number: addr.number,
+          city: addr.city,
+          state: addr.state,
+          cep: addr.cep,
+        }
       }
     }
+
+    console.log('[purchase POST] payload:', { cep, serviceId, toName, toAddress, toCity, origin: fromAddress?.name, originCep: fromAddress?.cep })
+
+    // Purchase the label via Melhor Envio API
+    const result = await purchaseLabel(cep, serviceId, toName, toAddress, toCity, fromAddress)
+
+    if (!result.success) {
+      console.error('[purchase POST] label failed:', result.error)
+      return NextResponse.json({ success: false, error: result.error }, { status: 422 })
+    }
+
+    console.log('[purchase POST] label OK:', JSON.stringify(result))
+
+    // Update order with tracking
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        fulfillmentStatus: 'awaiting_pickup',
+        notes: `Etiqueta: ${result.tracking} — R$ ${result.price.toFixed(2)}`,
+      },
+    })
+    await prisma.orderItem.updateMany({ where: { orderId }, data: { productionStatus: 'shipped' } })
+
+    return NextResponse.json({ success: true, tracking: result.tracking, price: result.price })
+  } catch (err: any) {
+    console.error('[purchase POST] unhandled error:', err)
+    return NextResponse.json({ success: false, error: err.message || 'Erro interno' }, { status: 500 })
   }
-
-  console.log('[purchase] Attempting purchase with:', { cep, serviceId, toName, toAddress, toCity, fromAddress: fromAddress?.name })
-
-  // Purchase the label via Melhor Envio API
-  const label = await purchaseLabel(cep, serviceId, toName, toAddress, toCity, fromAddress)
-  if (!label) {
-    console.error('[purchase] Label purchase returned null')
-    return NextResponse.json({ success: false, error: 'Falha ao comprar etiqueta. Verifique os logs do servidor.' }, { status: 500 })
-  }
-  console.log('[purchase] Label purchased:', JSON.stringify(label))
-
-  // Update order with tracking
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      fulfillmentStatus: 'awaiting_pickup',
-      notes: `Etiqueta: ${label.tracking} — R$ ${label.price.toFixed(2)}`,
-    },
-  })
-  await prisma.orderItem.updateMany({ where: { orderId }, data: { productionStatus: 'shipped' } })
-
-  return NextResponse.json({ success: true, tracking: label.tracking, price: label.price })
 }
