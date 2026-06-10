@@ -5,6 +5,7 @@ import { Inter, Poppins } from 'next/font/google'
 import { ThemeProvider } from '@/components/shared/theme-provider'
 import { Header } from '@/components/shared/header'
 import { Footer } from '@/components/shared/footer'
+import { MetaPixel } from '@/components/shared/meta-pixel'
 import './globals.css'
 
 const inter = Inter({
@@ -45,6 +46,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-body text-foreground antialiased flex flex-col">
+        <MetaPixel />
         <ThemeProvider>
           <Header />
           <main className="flex-1">{children}</main>
