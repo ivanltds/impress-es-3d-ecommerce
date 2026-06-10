@@ -26,7 +26,7 @@ export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [selected, setSelected] = useState<Lead | null>(null)
   const [dragOver, setDragOver] = useState<LeadStatus | null>(null)
-  const [orderForm, setOrderForm] = useState<{ leadId: string; name: string; price: number; description: string } | null>(null)
+  const [orderForm, setOrderForm] = useState<{ leadId: string; name: string; price: number; description: string; cep: string; street: string; number: string; district: string; city: string; paymentMethod: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -51,23 +51,36 @@ export default function AdminLeadsPage() {
   function handleDrop(e: React.DragEvent, status: LeadStatus) {
     e.preventDefault(); setDragOver(null)
     const leadId = e.dataTransfer.getData('text/plain')
-    if (leadId) moveLead(leadId, status)
+    if (!leadId) return
+    if (status === 'convertido') {
+      // Open order form modal instead of just moving
+      const lead = leads.find((l) => l.id === leadId)
+      if (lead) {
+        moveLead(leadId, 'em-atendimento')
+        setOrderForm({ leadId: lead.id, name: lead.message.slice(0, 50), price: 49.9, description: lead.message, cep: '', street: '', number: '', district: '', city: '', paymentMethod: 'stripe' })
+        setSelected(lead)
+      }
+    } else {
+      moveLead(leadId, status)
+    }
   }
 
   async function createOrder(lead: Lead) {
+    if (!orderForm) return
     const orderNumber = `3DP-${Math.floor(Math.random() * 99999).toString().padStart(5, '0')}`
-    const paymentLink = `${window.location.origin}/checkout?lead=${lead.id}&order=${orderNumber}`
-    // Create real order in DB
+    // Create real order in DB with full address
     await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: [{ productId: 'lead', name: orderForm?.name || lead.message.slice(0, 50), qty: 1, price: orderForm?.price || 49.9 }],
-        shippingCost: 0, paymentMethod: 'stripe',
-        cep: '', street: '', number: '', district: '', city: '', state: 'SP',
+        items: [{ productId: 'lead', name: orderForm.name, qty: 1, price: orderForm.price, sku: 'custom' }],
+        shippingCost: 0,
+        paymentMethod: orderForm.paymentMethod || 'stripe',
+        cep: orderForm.cep, street: orderForm.street, number: orderForm.number,
+        district: orderForm.district, city: orderForm.city, state: 'SP',
       }),
     })
-    // Update lead
+    const paymentLink = `${window.location.origin}/checkout?lead=${lead.id}&order=${orderNumber}`
     await fetch('/api/admin/leads', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -75,6 +88,8 @@ export default function AdminLeadsPage() {
     })
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: 'convertido', orderId: orderNumber, paymentLink } : l)))
     setOrderForm(null)
+    // Refresh production and orders
+    window.dispatchEvent(new Event('cart-updated'))
   }
 
   function markLost(lead: Lead) {
@@ -146,7 +161,7 @@ export default function AdminLeadsPage() {
               <div className="flex flex-wrap gap-2 border-t pt-4">
                 {selected.status === 'novo' || selected.status === 'em-atendimento' ? (
                   <>
-                    <button onClick={() => { setOrderForm({ leadId: selected.id, name: selected.message.slice(0, 50), price: 49.9, description: selected.message }); moveLead(selected.id, 'em-atendimento') }}
+                    <button onClick={() => { setOrderForm({ leadId: selected.id, name: selected.message.slice(0, 50), price: 49.9, description: selected.message, cep: '', street: '', number: '', district: '', city: '', paymentMethod: 'stripe' }); moveLead(selected.id, 'em-atendimento') }}
                       className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
                       <ShoppingCart className="h-3.5 w-3.5" /> Criar Pedido
                     </button>
@@ -173,15 +188,36 @@ export default function AdminLeadsPage() {
       {/* Order Form Modal */}
       {orderForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setOrderForm(null)}>
-          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading text-lg font-bold">Criar Pedido</h3>
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-heading text-lg font-bold">Registrar Compra</h3>
             <div className="mt-4 space-y-3">
-              <div><label className="block text-xs font-medium">Produto</label><input value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
-              <div><label className="block text-xs font-medium">Preço (R$)</label><input type="number" step="0.01" value={orderForm.price} onChange={(e) => setOrderForm({ ...orderForm, price: parseFloat(e.target.value) || 0 })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-medium">Produto *</label><input value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                <div><label className="block text-xs font-medium">Preço (R$) *</label><input type="number" step="0.01" value={orderForm.price} onChange={(e) => setOrderForm({ ...orderForm, price: parseFloat(e.target.value) || 0 })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+              </div>
               <div><label className="block text-xs font-medium">Descrição</label><textarea value={orderForm.description} onChange={(e) => setOrderForm({ ...orderForm, description: e.target.value })} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Endereço de Entrega</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-muted-foreground">CEP</label><input value={orderForm.cep} onChange={(e) => setOrderForm({ ...orderForm, cep: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                  <div><label className="block text-xs text-muted-foreground">Nº</label><input value={orderForm.number} onChange={(e) => setOrderForm({ ...orderForm, number: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                </div>
+                <div className="mt-2"><label className="block text-xs text-muted-foreground">Rua</label><input value={orderForm.street} onChange={(e) => setOrderForm({ ...orderForm, street: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-muted-foreground">Bairro</label><input value={orderForm.district} onChange={(e) => setOrderForm({ ...orderForm, district: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                  <div><label className="block text-xs text-muted-foreground">Cidade</label><input value={orderForm.city} onChange={(e) => setOrderForm({ ...orderForm, city: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" /></div>
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Pagamento</p>
+                <select value={orderForm.paymentMethod} onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })} className="w-full rounded-lg border px-3 py-2 text-sm">
+                  <option value="stripe">Cartão de Crédito</option>
+                  <option value="mercadopago">Pix</option>
+                </select>
+              </div>
               <div className="flex gap-2 pt-2">
                 <button onClick={() => createOrder(leads.find((l) => l.id === orderForm.leadId)!)} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground">
-                  <DollarSign className="mr-1 inline h-4 w-4" /> Gerar Pedido
+                  <DollarSign className="mr-1 inline h-4 w-4" /> Registrar Compra
                 </button>
                 <button onClick={() => setOrderForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>
               </div>
