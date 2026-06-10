@@ -17,16 +17,21 @@ export async function GET() {
     include: { items: true, user: { select: { name: true } } },
   })
 
-  const shipments = orders.map((o) => ({
-    id: o.id,
-    orderId: o.id,
-    orderNumber: o.orderNumber,
-    customerName: o.user?.name || 'Cliente',
-    items: o.items.map((i) => i.productNameSnapshot).join(', '),
-    total: o.total,
-    status: o.fulfillmentStatus === 'delivered' ? 'delivered' : 'in_transit',
-    updatedAt: o.createdAt.toISOString(),
-  }))
+  const shipments = orders.map((o) => {
+    // Map fulfillmentStatus to shipping kanban column
+    const shippingStatus =
+      o.fulfillmentStatus === 'delivered' ? 'delivered' : 'posted'
+    return {
+      id: o.id,
+      orderId: o.id,
+      orderNumber: o.orderNumber,
+      customerName: o.user?.name || 'Cliente',
+      items: o.items.map((i) => i.productNameSnapshot).join(', '),
+      total: o.total,
+      status: shippingStatus,
+      updatedAt: o.createdAt.toISOString(),
+    }
+  })
 
   return NextResponse.json(shipments)
 }
@@ -36,7 +41,13 @@ export async function PATCH(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id, status } = await req.json()
 
-  const dbStatus = status === 'delivered' ? 'delivered' : 'shipped'
+  // Map shipping kanban columns to DB fulfillmentStatus
+  const statusMap: Record<string, string> = {
+    posted: 'shipped',
+    in_transit: 'shipped',
+    delivered: 'delivered',
+  }
+  const dbStatus = statusMap[status] || 'shipped'
 
   await prisma.order.update({
     where: { id },

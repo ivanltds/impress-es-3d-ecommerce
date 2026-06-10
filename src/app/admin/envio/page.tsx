@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Package, User, MapPin, Truck, CheckCircle, Clock } from 'lucide-react'
 
-type ShippingStatus = 'preparing' | 'posted' | 'in_transit' | 'delivered'
+type ShippingStatus = 'posted' | 'in_transit' | 'delivered'
 
 interface Shipment {
   id: string
@@ -20,7 +20,6 @@ interface Shipment {
 }
 
 const COLUMNS: { key: ShippingStatus; label: string; color: string; icon: typeof Package }[] = [
-  { key: 'preparing', label: 'Preparar', color: 'bg-amber-50 border-amber-200', icon: Package },
   { key: 'posted', label: 'Postado', color: 'bg-blue-50 border-blue-200', icon: Truck },
   { key: 'in_transit', label: 'Em Trânsito', color: 'bg-purple-50 border-purple-200', icon: Clock },
   { key: 'delivered', label: 'Entregue', color: 'bg-green-50 border-green-200', icon: CheckCircle },
@@ -60,7 +59,7 @@ export default function EnvioPage() {
   return (
     <div className="p-6">
       <h1 className="font-heading text-2xl font-bold">Envio</h1>
-      <div className="mt-6 grid grid-cols-4 gap-4" data-testid="shipping-board">
+      <div className="mt-6 grid grid-cols-3 gap-4" data-testid="shipping-board">
         {COLUMNS.map((col) => {
           const items = shipments.filter((s) => s.status === col.key)
           return (
@@ -100,7 +99,7 @@ export default function EnvioPage() {
               <p className="text-sm"><strong>Itens:</strong> {selected.items}</p>
               <p className="text-sm"><strong>Total:</strong> R$ {selected.total.toFixed(2)}</p>
               {selected.trackingCode && <p className="text-sm font-medium text-primary">Rastreio: {selected.trackingCode}</p>}
-              {!selected.trackingCode && selected.status !== 'preparing' && (
+              {!selected.trackingCode && selected.status === 'posted' && (
                 <input
                   placeholder="Código de rastreio"
                   onBlur={(e) => {
