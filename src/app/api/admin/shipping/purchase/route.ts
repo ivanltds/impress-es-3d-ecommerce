@@ -2,21 +2,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getRealShippingOptions, purchaseLabel } from '@/lib/shipping'
+import { getRealShippingOptions, purchaseLabel, StoreAddressData } from '@/lib/shipping'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const cep = request.nextUrl.searchParams.get('cep')
+  const addressId = request.nextUrl.searchParams.get('addressId')
   if (!cep) return NextResponse.json({ error: 'CEP required' }, { status: 400 })
-  const services = await getRealShippingOptions(cep)
+
+  let fromCep: string | undefined
+  if (addressId) {
+    const addr = await prisma.storeAddress.findUnique({ where: { id: addressId } })
+    if (addr) fromCep = addr.cep
+  }
+
+  const services = await getRealShippingOptions(cep, fromCep)
   return NextResponse.json(services)
 }
 
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { orderId, cep, serviceId } = await request.json()
+  const { orderId, cep, serviceId, addressId } = await request.json()
   if (!orderId || !cep || !serviceId) return NextResponse.json({ error: 'orderId, cep e serviceId obrigatórios' }, { status: 400 })
 
   // Fetch order for address details
@@ -26,7 +34,7 @@ export async function POST(request: NextRequest) {
   })
   if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
 
-  // Extract address info
+  // Extract destination address info
   let toName = order.user?.name || 'Cliente'
   let toAddress = 'Endereco'
   let toCity = 'Cidade'
@@ -38,10 +46,26 @@ export async function POST(request: NextRequest) {
     }
   } catch {}
 
-  console.log('[purchase] Attempting purchase with:', { cep, serviceId, toName, toAddress, toCity })
+  // Fetch origin store address from DB
+  let fromAddress: StoreAddressData | undefined
+  if (addressId) {
+    const addr = await prisma.storeAddress.findUnique({ where: { id: addressId } })
+    if (addr) {
+      fromAddress = {
+        name: addr.name,
+        street: addr.street,
+        number: addr.number,
+        city: addr.city,
+        state: addr.state,
+        cep: addr.cep,
+      }
+    }
+  }
 
-  // Purchase the label via Melhor Envio
-  const label = await purchaseLabel(cep, serviceId, toName, toAddress, toCity)
+  console.log('[purchase] Attempting purchase with:', { cep, serviceId, toName, toAddress, toCity, fromAddress: fromAddress?.name })
+
+  // Purchase the label via Melhor Envio API
+  const label = await purchaseLabel(cep, serviceId, toName, toAddress, toCity, fromAddress)
   if (!label) {
     console.error('[purchase] Label purchase returned null')
     return NextResponse.json({ success: false, error: 'Falha ao comprar etiqueta. Verifique os logs do servidor.' }, { status: 500 })

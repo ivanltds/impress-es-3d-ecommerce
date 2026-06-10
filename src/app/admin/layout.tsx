@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import Link from 'next/link'
-import { LayoutDashboard, Package, ShoppingBag, ClipboardList, BarChart3, Users, Truck } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, ClipboardList, BarChart3, Users, Truck, Settings } from 'lucide-react'
 
 const ADMIN_ROLES = ['admin', 'operator']
 
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/producao', label: 'Produção', icon: ClipboardList },
   { href: '/admin/envio', label: 'Envio', icon: Truck },
   { href: '/admin/leads', label: 'Leads', icon: Users },
+  { href: '/admin/configuracoes/enderecos', label: 'Endereços', icon: Settings },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

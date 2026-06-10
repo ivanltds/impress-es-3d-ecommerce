@@ -9,15 +9,26 @@ export interface ShippingOption {
   days: number
 }
 
+export interface StoreAddressData {
+  name: string
+  street: string
+  number: string
+  city: string
+  state: string
+  cep: string // formatado: "06110-000"
+}
+
 // Suporte a sandbox: defina MELHOR_ENVIO_SANDBOX=true na Vercel se usar token de teste
 const MELHOR_ENVIO_URL = process.env.MELHOR_ENVIO_SANDBOX === 'true'
   ? 'https://sandbox.melhorenvio.com.br/api/v2'
   : 'https://melhorenvio.com.br/api/v2'
-const FROM_CEP = '06110000'
-const FROM_CEP_FORMATTED = '06110-000' // Osasco/SP — com traço para API de compra
 
 // Melhor Envio exige User-Agent com nome do app e e-mail do desenvolvedor
 const ME_USER_AGENT = 'Impressao3DStore (ivanltds@gmail.com)'
+
+function formatCep(cep: string): string {
+  return cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
+}
 
 function meHeaders(token: string) {
   return {
@@ -28,7 +39,7 @@ function meHeaders(token: string) {
   }
 }
 
-async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
+async function fetchMelhorEnvio(cep: string, fromCep?: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
 
   if (!token) {
@@ -36,10 +47,12 @@ async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
     return fallbackShipping(cep)
   }
 
+  // CEP de origem: prioriza parâmetro, fallback para env var (compatibilidade)
+  const originCep = formatCep(fromCep || process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
+
   try {
-    // Calcular frete
     const body = {
-      from: { postal_code: FROM_CEP_FORMATTED },
+      from: { postal_code: originCep },
       to: { postal_code: cep.replace(/\D/g, '') },
       products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
       options: { receipt: false, own_hand: false },
@@ -123,20 +136,22 @@ export async function calculateShipping(cep: string): Promise<ShippingOption[]> 
 }
 
 // For purchase flow — only returns real API data, no fallback
-export async function getRealShippingOptions(cep: string): Promise<ShippingOption[]> {
+export async function getRealShippingOptions(cep: string, fromCep?: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   console.log('[shipping] getRealShippingOptions token present:', !!token)
   if (!token) return []
 
+  const originCep = formatCep(fromCep || process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
+
   try {
     const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
     const body = {
-      from: { postal_code: FROM_CEP_FORMATTED },
+      from: { postal_code: originCep },
       to: { postal_code: cep.replace(/\D/g, '') },
       products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
       options: { receipt: false, own_hand: false },
     }
-    console.log('[shipping] calculate request:', JSON.stringify({ url, body }))
+    console.log('[shipping] calculate request:', JSON.stringify({ url, from: originCep, to: cep }))
     const res = await fetch(url, {
       method: 'POST',
       headers: meHeaders(token),
@@ -158,12 +173,14 @@ export async function getRealShippingOptions(cep: string): Promise<ShippingOptio
 }
 
 // ─── Label Purchase ───
+// fromAddress: endereço de origem da loja (do BD); se omitido, usa env var de fallback
 export async function purchaseLabel(
   cep: string,
   serviceId: string,
   toName: string,
   toAddress: string,
-  toCity: string
+  toCity: string,
+  fromAddress?: StoreAddressData
 ): Promise<{ tracking: string; price: number } | null> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   if (!token) {
@@ -171,11 +188,16 @@ export async function purchaseLabel(
     return null
   }
 
+  const originName = fromAddress?.name || 'Impressao 3D'
+  const originStreet = fromAddress ? `${fromAddress.street}, ${fromAddress.number}` : 'Rua Exemplo, 123'
+  const originCity = fromAddress?.city || 'Osasco'
+  const originCep = fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
+
   try {
     // Step 1: Add to cart
     const body = {
-      from: { name: 'Impressao 3D', address: 'Rua Exemplo 123', city: 'Osasco', postal_code: FROM_CEP_FORMATTED },
-      to: { name: toName, address: toAddress, city: toCity, postal_code: cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2') },
+      from: { name: originName, address: originStreet, city: originCity, postal_code: originCep },
+      to: { name: toName, address: toAddress, city: toCity, postal_code: formatCep(cep) },
       service: Number(serviceId),
       products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },

@@ -1,137 +1,65 @@
-# Contexto do Projeto — Impressão 3D E-commerce
+# Session Latest — 3DPrint Store
 
-> **Data:** 2026-06-10
-> **MVP:** 100% implementado (pendente: compra de etiqueta Melhor Envio com erro 422)
-> **Metodologia:** Maestro - Agile SDD com TDD v2.0.0
+## Data: 2026-06-10
+
+## Milestone Ativo: M04 (Fulfillment)
+## Fase: Implementação concluída (aguardando deploy + teste)
+## Gate Pendente: G3 (testes passando) → G4 (QA verifica deploy preview)
 
 ---
 
-## 1. IDENTIDADE
+## Último Progresso
 
-- **Nome:** Impressão 3D Personalizada
-- **Stack:** Next.js 16.2.9 (App Router), TypeScript strict, Tailwind CSS, Prisma 5.22, Neon PostgreSQL, Vercel
-- **Repo:** https://github.com/ivanltds/impress-es-3d-ecommerce
-- **Produção:** https://impress-es-3d-ecommerce.vercel.app
-- **Admin:** https://impress-es-3d-ecommerce.vercel.app/admin (login: ivanltds@gmail.com, role: admin)
+### Feature: StoreAddress (endereços de origem para etiquetas)
+**Status: IMPLEMENTADO — aguardando `prisma db push` e deploy**
 
-## 2. MVP — 4 SPRINTS ENTREGUES
+Arquivos criados/modificados:
+- `prisma/schema.prisma` — model `StoreAddress` adicionado
+- `src/app/api/admin/store-addresses/route.ts` — GET (listar), POST (criar)
+- `src/app/api/admin/store-addresses/[id]/route.ts` — PATCH (editar/toggleActive), DELETE
+- `src/app/admin/configuracoes/enderecos/page.tsx` — página CRUD admin
+- `src/lib/shipping.ts` — `getRealShippingOptions(cep, fromCep?)` e `purchaseLabel(..., fromAddress?)` aceitam endereço como parâmetro
+- `src/app/api/admin/shipping/purchase/route.ts` — GET aceita `addressId`, POST aceita `addressId` e usa o endereço do BD
+- `src/app/admin/producao/page.tsx` — modal de envio com select de endereço ativo, calcula frete com addressId
+- `src/app/admin/layout.tsx` — nav item "Endereços" adicionado (Settings icon, /admin/configuracoes/enderecos)
 
-### M01 ✅ Foundation
-- Next.js scaffold, TypeScript, Tailwind, shadcn/ui
-- Autenticação (NextAuth v5, e-mail+senha, roles: admin/operator/customer)
-- Tema claro/escuro (data-mode, cookie, sem flicker)
-- Layout responsivo (Header, Footer, nav mobile)
-- Home page: hero, 5 coleções, como funciona, destaques, WhatsApp CTA
-- Health check, Prisma, Neon DB
+### Comportamento do modal de envio:
+1. Admin arrasta card para "Enviado p/ Entrega"
+2. Modal abre → busca endereços ativos (`GET /api/admin/store-addresses`)
+3. Admin seleciona: a) endereço de ORIGEM (select) b) CEP de destino (input)
+4. Clica "Calcular" → `GET /api/admin/shipping/purchase?cep=X&addressId=Y`
+5. Seleciona serviço → "Comprar Etiqueta" → `POST /api/admin/shipping/purchase` com `{orderId, cep, serviceId, addressId}`
+6. API busca `StoreAddress` pelo `addressId`, passa `fromAddress` para `purchaseLabel()`
 
-### M02 ✅ Catalog + Experience
-- Catálogo de produtos (grid, filtros, busca, ordenação)
-- PDP (galeria, lightbox, breadcrumb, produtos relacionados)
-- Coleções dinâmicas com banner temático
-- Zero emojis — Lucide Icons
-- Animações Framer Motion (stagger, hover, scroll reveal)
-- Seed: 8 produtos, 5 categorias (Gamer, Anime, Casa, Presentes, Auto)
+---
 
-### M03 ✅ Cart + Checkout + Customer
-- Carrinho (localStorage guest + API logado, contador no header)
-- Checkout 3 etapas (endereço → frete → pagamento)
-- Frete real via Melhor Envio API (token: MELHOR_ENVIO_TOKEN)
-- Pagamento MOCK (Stripe + MercadoPago — ver FF01)
-- Perfil do cliente, histórico de pedidos, endereços
-- Confirmação de pedido com número 3DP-XXXXX
+## Bloqueios / Pendências
 
-### M04 ✅ Admin + Operations + Analytics
-- Dashboard com métricas (pedidos, receita, ticket médio)
-- CRUD de produtos (grid/lista, criar, editar, upload de imagens)
-- Upload seguro (magic bytes, tipo MIME, 5MB max, base64)
-- Gestão de pedidos (grid/lista, filtro abertos, busca)
-- Kanban de produção (5 colunas, drag-drop, sincronizado com BD)
-- Kanban de envio (3 colunas, tracking code)
-- Kanban de leads (5 colunas, conversão em pedido)
-- Leads salvos no banco (tabela Lead)
+1. **`prisma db push`** — usuário deve rodar localmente (sandbox não tem acesso ao Neon):
+   ```
+   npx prisma db push
+   npx prisma generate
+   ```
 
-## 3. ARQUITETURA
+2. **Variável `MELHOR_ENVIO_FROM_CEP`** na Vercel — pode ser removida após cadastrar endereço no BD.
+   A variável ainda funciona como fallback mas não é mais necessária.
 
-### Banco de Dados (Neon PostgreSQL)
-```
-User, Account, Session, VerificationToken
-ThemePreference, Address
-Category, Product
-Cart, CartItem
-Order, OrderItem
-Lead
-```
+3. **Rota debug** `src/app/api/admin/shipping/debug/route.ts` — pode ser removida quando o bug de CEP estiver confirmado como resolvido.
 
-### APIs (principais)
-```
-/api/auth/[...nextauth]    — NextAuth
-/api/auth/register         — Cadastro
-/api/cart                  — Carrinho (CRUD)
-/api/checkout              — Criar pedido
-/api/shipping              — Calcular frete (Melhor Envio)
-/api/health                — Health check
-/api/admin/orders          — Listar pedidos
-/api/admin/production      — Itens em produção (GET + PATCH)
-/api/admin/shipping        — Pedidos em envio (GET + PATCH)
-/api/admin/shipping/purchase — Opções de frete + compra etiqueta
-/api/admin/leads           — Leads (GET + POST + PATCH)
-/api/admin/products        — Produtos (GET + PATCH)
-/api/admin/products/create — Criar produto
-/api/admin/upload          — Upload de imagem (base64)
-/api/admin/categories      — Categorias
-```
+4. **Testes E2E** — 2 flaky/skipped ainda pendentes.
 
-### Fluxo Principal (Lead → Pedido → Produção → Envio)
-```
-Lead (novo) → Atendimento → Convertido → Order (paid)
-  → Produção (Aguardando → Em Produção → Acabamento → Embalado → Enviado p/ Entrega)
-  → Envio (Postado → Em Trânsito → Entregue)
-```
+5. **Pagamento real** (Stripe/MercadoPago) — backlog FF01.
 
-### Order.fulfillmentStatus
-- `unfulfilled` = produção pendente
-- `in_progress` = em produção
-- `shipped` = enviado (aparece no envio)
-- `delivered` = entregue (sai dos abertos)
+---
 
-### OrderItem.productionStatus
-- `pending`, `in_progress`, `finishing`, `packed`, `shipped`
+## Próximo Passo Sugerido
 
-## 4. PENDÊNCIAS
-
-### 🔴 Ativo
-- **Compra de etiqueta Melhor Envio:** endpoint `/api/admin/shipping/purchase` POST retorna 500. O GET (`getRealShippingOptions`) retorna array vazio. Token `MELHOR_ENVIO_TOKEN` está configurado na Vercel (funciona no checkout, mas não na rota de compra). Último log: `[shipping] getRealShippingOptions token present: true` aguardando.
-
-### 🟡 Backlog
-- **FF01:** Substituir mock de pagamento (Stripe + MercadoPago reais)
-- **FF03:** Modal de envio ao concluir produção (implementado, compra de etiqueta pendente)
-- Teste E2E `cart-checkout 2.5` (confirmação de pedido) está skipado — flaky
-
-### ✅ Resolvido
-- Supabase não funciona com Vercel (IPv6 vs IPv4) → migrado para Neon
-- Imagens somem no deploy → armazenamento base64
-- CEP não persistia → campo próprio `Order.cep`
-- Status de produção não atualizava pedido → sincronizado via API
-
-## 5. TESTES
-- Unitários: 4/4 ✅ (Vitest)
-- E2E: 66/68 ✅ (Playwright, 2 skipados/flaky)
-- Build: ✅
-
-## 6. ENV VARS (Vercel)
-```
-DATABASE_URL           — Neon PostgreSQL
-AUTH_SECRET            — NextAuth secret
-MELHOR_ENVIO_TOKEN     — Token da API Melhor Envio
-NEXT_PUBLIC_APP_URL    — https://impress-es-3d-ecommerce.vercel.app
-```
-
-## 7. COMANDOS ÚTEIS
-```bash
-npm run dev           # Dev server
-npm run build         # Build
-npm run test          # Unit tests
-npm run test:e2e      # E2E tests
-npx prisma db push    # Sync schema
-npx tsx prisma/seed.ts # Seed database
-```
+1. Usuário roda `npx prisma db push` (cria tabela StoreAddress no Neon)
+2. Faz commit + push:
+   ```
+   git add prisma/schema.prisma src/lib/shipping.ts src/app/api/admin/store-addresses src/app/api/admin/shipping/purchase/route.ts src/app/admin/configuracoes/enderecos src/app/admin/producao/page.tsx src/app/admin/layout.tsx
+   git commit -m "feat: StoreAddress — endereços de origem da loja para etiquetas Melhor Envio"
+   git push
+   ```
+3. Acessa `/admin/configuracoes/enderecos` no deploy preview → cadastra o endereço real da loja
+4. Testa fluxo: Produção → arrastar para "Enviado p/ Entrega" → selecionar endereço → calcular frete → comprar etiqueta

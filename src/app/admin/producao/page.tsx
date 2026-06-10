@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { X, Clock, User, Package } from 'lucide-react'
+import { X, Clock, User, Package, MapPin } from 'lucide-react'
 
 type Status = 'pending' | 'in_progress' | 'finishing' | 'packed' | 'shipped'
 
@@ -10,6 +10,10 @@ interface KanbanItem {
   customerPhone?: string; productNameSnapshot: string; qty: number
   customizationSnapshot?: string; productionStatus: string; productionNotes?: string
   total: number; estimatedHours: number; cep?: string
+}
+
+interface StoreAddress {
+  id: string; name: string; street: string; number: string; city: string; state: string; cep: string; isActive: boolean
 }
 
 const COLUMNS: { key: Status; label: string; color: string }[] = [
@@ -26,14 +30,15 @@ export default function ProducaoPage() {
   const [dragOver, setDragOver] = useState<Status | null>(null)
   const [loading, setLoading] = useState(true)
   const [shippingForm, setShippingForm] = useState<KanbanItem | null>(null)
-  const [trackingCode, setTrackingCode] = useState('')
-  const [carrier, setCarrier] = useState('Correios')
   const [shippingCep, setShippingCep] = useState('')
   const [shippingServices, setShippingServices] = useState<Array<{ id: number; name: string; price: number; days: number }>>([])
   const [selectedService, setSelectedService] = useState<number>(0)
   const [selectedServicePrice, setSelectedServicePrice] = useState<number>(0)
   const [purchasing, setPurchasing] = useState(false)
   const [servicesError, setServicesError] = useState('')
+  // Store addresses
+  const [storeAddresses, setStoreAddresses] = useState<StoreAddress[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('')
 
   useEffect(() => {
     fetch('/api/admin/production')
@@ -42,15 +47,18 @@ export default function ProducaoPage() {
       .catch(() => setLoading(false))
   }, [])
 
-  async function fetchServices(cep: string) {
+  async function fetchServices(cep: string, addressId: string) {
+    if (!addressId) {
+      setServicesError('Selecione um endereço de origem antes de calcular o frete.')
+      return
+    }
     setServicesError('')
     setShippingServices([])
     try {
-      const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}`)
+      const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}&addressId=${addressId}`)
       const data = await res.json()
       if (res.ok && Array.isArray(data) && data.length > 0) {
         setShippingServices(data)
-        // Auto-select cheapest option
         const cheapest = data.reduce((a: any, b: any) => (a.price < b.price ? a : b))
         setSelectedService(cheapest.id)
         setSelectedServicePrice(cheapest.price)
@@ -66,14 +74,24 @@ export default function ProducaoPage() {
     if (toStatus === 'shipped') {
       const item = items.find((i) => i.id === itemId)
       if (item) {
+        // Fetch active store addresses
+        const addrRes = await fetch('/api/admin/store-addresses')
+        const addrs: StoreAddress[] = await addrRes.json()
+        const active = addrs.filter((a) => a.isActive)
+        setStoreAddresses(active)
+        // Auto-select if only one active address
+        const defaultAddr = active.length === 1 ? active[0].id : ''
+        setSelectedAddressId(defaultAddr)
         setShippingForm(item)
-        setTrackingCode('')
-        setCarrier('Correios')
         setShippingServices([])
         setSelectedService(0)
+        setServicesError('')
         const orderCep = (item as any).cep || ''
         setShippingCep(orderCep)
-        if (orderCep && orderCep.length >= 5) fetchServices(orderCep)
+        // Auto-calculate if we have both CEP and address
+        if (orderCep && orderCep.length >= 5 && defaultAddr) {
+          fetchServices(orderCep, defaultAddr)
+        }
       }
       return
     }
@@ -89,18 +107,16 @@ export default function ProducaoPage() {
   }
 
   async function confirmShipping() {
-    if (!shippingForm || !selectedService || !shippingCep) return
+    if (!shippingForm || !selectedService || !shippingCep || !selectedAddressId) return
     setPurchasing(true)
     const itemId = shippingForm.id
-    // Purchase label via Melhor Envio API
     const res = await fetch('/api/admin/shipping/purchase', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId: shippingForm.orderId, cep: shippingCep, serviceId: String(selectedService) }),
+      body: JSON.stringify({ orderId: shippingForm.orderId, cep: shippingCep, serviceId: String(selectedService), addressId: selectedAddressId }),
     })
     const data = await res.json()
     if (data.success) {
-      // Move item to shipped
       setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i)))
       await fetch('/api/admin/production', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemId, status: 'shipped', notes: `Etiqueta: ${data.tracking}` }) })
     } else {
@@ -160,7 +176,7 @@ export default function ProducaoPage() {
       {/* Shipping Modal */}
       {shippingForm && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50" onClick={() => setShippingForm(null)}>
-          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-heading text-lg font-bold">Registrar Envio</h3>
               <button onClick={() => setShippingForm(null)} className="rounded-lg p-2 hover:bg-muted"><X className="h-5 w-5" /></button>
@@ -169,16 +185,61 @@ export default function ProducaoPage() {
               <p className="text-sm"><strong>Pedido:</strong> {shippingForm.orderNumber}</p>
               <p className="text-sm"><strong>Cliente:</strong> {shippingForm.customerName}</p>
               <p className="text-sm"><strong>Produto:</strong> {shippingForm.productNameSnapshot} x{shippingForm.qty}</p>
-              <div className="border-t pt-3">
-                <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">CEP de Entrega</label>
-                <div className="flex gap-2">
-                  <input value={shippingCep} onChange={(e) => setShippingCep(e.target.value)} placeholder="01001000" className="flex-1 rounded-lg border px-3 py-2 text-sm" />
-                  <button type="button" onClick={() => { if (shippingCep && shippingCep.length >= 5) fetchServices(shippingCep) }} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Calcular</button>
+
+              <div className="border-t pt-3 space-y-3">
+                {/* Origin address selector */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">
+                    <MapPin className="inline h-3 w-3 mr-1" />Endereço de Origem
+                  </label>
+                  {storeAddresses.length === 0 ? (
+                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                      Nenhum endereço ativo. <a href="/admin/configuracoes/enderecos" className="underline font-semibold">Cadastrar agora →</a>
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedAddressId}
+                      onChange={(e) => {
+                        setSelectedAddressId(e.target.value)
+                        setShippingServices([])
+                        setSelectedService(0)
+                        setServicesError('')
+                      }}
+                      className="w-full rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <option value="">— selecione o endereço de origem —</option>
+                      {storeAddresses.map((a) => (
+                        <option key={a.id} value={a.id}>{a.name} — {a.city}/{a.state} · CEP {a.cep}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Destination CEP */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">CEP de Entrega</label>
+                  <div className="flex gap-2">
+                    <input
+                      value={shippingCep}
+                      onChange={(e) => setShippingCep(e.target.value)}
+                      placeholder="01001000"
+                      className="flex-1 rounded-lg border px-3 py-2 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { if (shippingCep && shippingCep.length >= 5 && selectedAddressId) fetchServices(shippingCep, selectedAddressId) }}
+                      disabled={!selectedAddressId || shippingCep.length < 5}
+                      className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-40"
+                    >
+                      Calcular
+                    </button>
+                  </div>
                 </div>
               </div>
+
               {shippingServices.length > 0 && (
                 <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                  <p className="text-xs font-semibold text-green-800">Serviço selecionado</p>
+                  <p className="text-xs font-semibold text-green-800 mb-1">Serviços disponíveis</p>
                   {shippingServices.map((s) => (
                     <label key={s.id} className={`flex items-center justify-between mt-2 p-2 rounded-lg cursor-pointer text-sm ${selectedService === s.id ? 'bg-white border border-primary' : ''}`}>
                       <div className="flex items-center gap-2">
@@ -190,11 +251,17 @@ export default function ProducaoPage() {
                   ))}
                 </div>
               )}
+
               {servicesError && (
                 <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-3">{servicesError}</p>
               )}
+
               <div className="flex gap-2 pt-3">
-                <button onClick={confirmShipping} disabled={purchasing || !selectedService} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <button
+                  onClick={confirmShipping}
+                  disabled={purchasing || !selectedService || !selectedAddressId}
+                  className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
                   {purchasing ? 'Comprando etiqueta...' : selectedService > 0 ? `Comprar Etiqueta — R$ ${selectedServicePrice.toFixed(2)}` : 'Selecione um serviço'}
                 </button>
                 <button onClick={() => setShippingForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>

@@ -220,3 +220,19 @@ model OrderItem {
   productionNotes        String?
   order                  Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
+
+// ─── StoreAddress: endereços de origem da loja para etiquetas ───
+model StoreAddress {
+  id           String   @id @default(cuid())
+  name         String   // ex: "Osasco SP", "Filial RJ"
+  street       String
+  number       String
+  complement   String?
+  neighborhood String?
+  city         String
+  state        String
+  cep          String   // formatado: "06110-000"
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
