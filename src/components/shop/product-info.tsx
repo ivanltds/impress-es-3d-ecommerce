@@ -1,4 +1,7 @@
-import { Clock, Ruler, Palette } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
+import { Clock, Ruler, Palette, ShoppingCart } from 'lucide-react'
 import type { Product, Category } from '@prisma/client'
 
 type ProductWithCategory = Product & { category: Category | null }
@@ -63,7 +66,28 @@ export function ProductInfo({ product }: { product: ProductWithCategory }) {
       </div>
 
       {/* CTA */}
-      <button className="mt-8 w-full rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/25">
+      <button
+        onClick={() => {
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+          const existing = cart.find((i: { productId: string }) => i.productId === product.id)
+          if (existing) {
+            existing.qty += 1
+          } else {
+            cart.push({
+              id: Date.now().toString(),
+              productId: product.id,
+              name: product.name,
+              price: product.basePrice,
+              qty: 1,
+            })
+          }
+          localStorage.setItem('cart', JSON.stringify(cart))
+          window.dispatchEvent(new Event('cart-updated'))
+        }}
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/25"
+        data-testid="add-to-cart"
+      >
+        <ShoppingCart className="h-4 w-4" />
         Adicionar ao Carrinho
       </button>
 

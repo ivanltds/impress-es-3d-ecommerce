@@ -1,13 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/components/shared/theme-provider'
 import { Sun, Moon, Search, ShoppingCart, Menu, X, Package } from 'lucide-react'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const { mode, toggleMode, mounted } = useTheme()
+
+  useEffect(() => {
+    function update() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      setCartCount(cart.reduce((s: number, i: { qty: number }) => s + i.qty, 0))
+    }
+    update()
+    window.addEventListener('cart-updated', update)
+    return () => window.removeEventListener('cart-updated', update)
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
@@ -68,6 +79,11 @@ export function Header() {
             data-testid="cart-button"
           >
             <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground" data-testid="cart-count">
+                {cartCount}
+              </span>
+            )}
             <span className="sr-only">Carrinho</span>
           </Link>
 
