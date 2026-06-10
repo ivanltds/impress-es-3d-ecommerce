@@ -32,6 +32,7 @@ export default function ProducaoPage() {
   const [shippingServices, setShippingServices] = useState<Array<{ id: number; name: string; price: number; days: number }>>([])
   const [selectedService, setSelectedService] = useState<number>(0)
   const [purchasing, setPurchasing] = useState(false)
+  const [servicesError, setServicesError] = useState('')
 
   useEffect(() => {
     fetch('/api/admin/production')
@@ -41,10 +42,22 @@ export default function ProducaoPage() {
   }, [])
 
   async function fetchServices(cep: string) {
-    const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}`)
-    if (res.ok) {
+    setServicesError('')
+    setShippingServices([])
+    try {
+      const res = await fetch(`/api/admin/shipping/purchase?cep=${cep.replace(/\D/g, '')}`)
       const data = await res.json()
-      setShippingServices(data)
+      if (res.ok) {
+        if (Array.isArray(data) && data.length > 0) {
+          setShippingServices(data)
+        } else {
+          setServicesError('Nenhum serviço disponível para este CEP. Verifique o token Melhor Envio.')
+        }
+      } else {
+        setServicesError(data.error || 'Erro ao consultar serviços de frete')
+      }
+    } catch {
+      setServicesError('Erro de conexão ao consultar frete')
     }
   }
 
@@ -160,7 +173,7 @@ export default function ProducaoPage() {
               </div>
               {shippingServices.length > 0 && (
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Serviço</label>
+                  <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Serviço disponível</label>
                   {shippingServices.map((s) => (
                     <button key={s.id} type="button" onClick={() => setSelectedService(s.id)}
                       className={`flex w-full items-center justify-between rounded-lg border p-2 text-sm mt-1 ${selectedService === s.id ? 'border-primary bg-primary/5' : ''}`}>
@@ -168,6 +181,9 @@ export default function ProducaoPage() {
                     </button>
                   ))}
                 </div>
+              )}
+              {servicesError && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-3">{servicesError}</p>
               )}
               <div className="border-t pt-3">
                 <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">Ou registro manual</label>

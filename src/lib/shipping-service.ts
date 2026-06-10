@@ -154,10 +154,14 @@ export async function purchaseLabel(
 // Calculate available shipping services
 export async function getShippingServices(toCep: string, products: ShippingProduct[]) {
   const token = getToken()
-  if (!token) return []
+  if (!token) {
+    console.error('[shipping] MELHOR_ENVIO_TOKEN is not set')
+    return []
+  }
 
   try {
-    const res = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/calculate`, {
+    const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -171,10 +175,19 @@ export async function getShippingServices(toCep: string, products: ShippingProdu
       }),
     })
 
-    if (!res.ok) return []
-    const data = await res.json()
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('[shipping] Calculate failed:', res.status, text)
+      return []
+    }
 
-    return data
+    const data = await res.json()
+    if (!Array.isArray(data)) {
+      console.error('[shipping] Unexpected response:', data)
+      return []
+    }
+
+    const services = data
       .filter((item: { error?: string; price?: number }) => !item.error && item.price)
       .map((item: { id: number; name: string; price: number; delivery_time: number }) => ({
         id: item.id,
@@ -182,7 +195,14 @@ export async function getShippingServices(toCep: string, products: ShippingProdu
         price: item.price,
         days: item.delivery_time,
       }))
-  } catch {
+
+    if (services.length === 0) {
+      console.error('[shipping] No services available. Data:', JSON.stringify(data).slice(0, 500))
+    }
+
+    return services
+  } catch (err) {
+    console.error('[shipping] getShippingServices error:', err)
     return []
   }
 }
