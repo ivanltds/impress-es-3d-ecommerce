@@ -48,17 +48,23 @@ export default function CheckoutPage() {
   async function handleConfirm() {
     setLoading(true)
     setError('')
-    const provider = getPaymentProvider(paymentMethod)
-    const result = await provider.processPayment(total, {})
-    if (result.success) {
-      // Save order to localStorage for demo (real orders go through server action)
-      const orderNumber = `3DP-${Math.floor(Math.random() * 99999).toString().padStart(5, '0')}`
-      localStorage.setItem('lastOrder', JSON.stringify({ orderNumber, items, total, date: new Date().toISOString() }))
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: items.map((i) => ({ productId: i.productId, name: i.name, qty: i.qty, price: i.price })),
+        shippingCost: shipping,
+        paymentMethod,
+        cep, street, number, district, city, state,
+      }),
+    })
+    const data = await res.json()
+    if (res.ok && data.success) {
       localStorage.removeItem('cart')
       window.dispatchEvent(new Event('cart-updated'))
-      router.push(`/checkout/confirmado?order=${orderNumber}`)
+      router.push(`/checkout/confirmado?order=${data.orderNumber}`)
     } else {
-      setError(result.error || 'Erro ao processar pagamento')
+      setError(data.error || 'Erro ao processar pagamento')
       setLoading(false)
     }
   }
