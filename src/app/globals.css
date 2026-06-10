@@ -17,8 +17,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ─── Core Theme (Default) ─── */
-:root {
+/* ─── Core Theme (Default / Light) ─── */
+:root,
+html[data-mode="light"] {
   --background: #ffffff;
   --foreground: #171717;
   --primary: #2563eb;
@@ -32,9 +33,9 @@
   --font-body: 'Inter', system-ui, sans-serif;
 }
 
-/* ─── Dark Mode (system preference) — F5.2 ─── */
+/* ─── Dark Mode (system preference, no manual choice) — F5.2 ─── */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-mode="light"]) {
     --background: #0f172a;
     --foreground: #e2e8f0;
     --primary: #38bdf8;
@@ -47,8 +48,8 @@
   }
 }
 
-/* ─── Dark class override (manual toggle) — F5.3 ─── */
-.dark {
+/* ─── Manual dark override — F5.3 (always wins) ─── */
+html[data-mode="dark"] {
   --background: #0f172a;
   --foreground: #e2e8f0;
   --primary: #38bdf8;
