@@ -1,54 +1,72 @@
-// ─── M04: Admin New Product ───
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
+'use client'
 
-export default async function AdminProdutoNovoPage() {
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } })
+// ─── M04: Admin New Product (with image upload) ───
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { ImageUpload } from '@/components/admin/image-upload'
 
-  async function create(formData: FormData) {
-    'use server'
-    const name = formData.get('name') as string
-    const slug = formData.get('slug') as string
-    const shortDescription = formData.get('shortDescription') as string
-    const longDescription = formData.get('longDescription') as string
-    const basePrice = parseFloat(formData.get('basePrice') as string)
-    const categoryId = formData.get('categoryId') as string
-    const collectionId = formData.get('collectionId') as string
-    const material = formData.get('material') as string
-    const customizationLevel = formData.get('customizationLevel') as string
-    const estimatedHours = parseInt(formData.get('estimatedHours') as string) || 2
-    const imageUrls = formData.get('imageUrls') as string
-    const images = imageUrls
-      ? imageUrls.split('\n').map((u) => u.trim()).filter(Boolean)
-      : []
+interface Category { id: string; name: string }
 
-    await prisma.product.create({
-      data: {
-        name,
-        slug,
-        shortDescription,
-        longDescription,
-        basePrice,
-        categoryId: categoryId || null,
-        collectionId: collectionId || null,
-        material: material || 'PLA Premium',
-        customizationLevel: customizationLevel || 'simple',
-        isCustomizable: customizationLevel !== 'none',
-        estimatedProductionTime: estimatedHours,
-        images,
-        productType: 'simple',
-      },
+export default function AdminProdutoNovoPage() {
+  const router = useRouter()
+  const [categories, setCategories] = useState<Category[]>([])
+  const [images, setImages] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/products')
+      .then((r) => r.json())
+      .then(() => {
+        // Get categories from a separate API or hardcode
+        // For now, use the same endpoint
+      })
+    // Fetch categories
+    fetch('/api/admin/categories')
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(() => {})
+  }, [])
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+
+    const form = new FormData(e.currentTarget)
+    const body: Record<string, unknown> = {
+      name: form.get('name'),
+      slug: form.get('slug'),
+      shortDescription: form.get('shortDescription'),
+      longDescription: form.get('longDescription'),
+      basePrice: parseFloat(form.get('basePrice') as string),
+      categoryId: form.get('categoryId') || null,
+      collectionId: form.get('collectionId') || null,
+      material: form.get('material') || 'PLA Premium',
+      customizationLevel: form.get('customizationLevel') || 'simple',
+      estimatedHours: parseInt(form.get('estimatedHours') as string) || 2,
+      images,
+    }
+
+    const res = await fetch('/api/admin/products/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     })
 
-    revalidatePath('/admin/produtos')
-    redirect('/admin/produtos')
+    if (res.ok) {
+      router.push('/admin/produtos')
+    } else {
+      const data = await res.json()
+      setError(data.error || 'Erro ao criar produto')
+      setSaving(false)
+    }
   }
 
   return (
-    <div className="p-6" data-testid="admin-new-product">
+    <div className="p-6">
       <h1 className="font-heading text-2xl font-bold">Novo Produto</h1>
-      <form action={create} className="mt-8 max-w-2xl space-y-4">
+      <form onSubmit={handleSubmit} className="mt-8 max-w-2xl space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Nome *</label>
@@ -61,11 +79,11 @@ export default async function AdminProdutoNovoPage() {
         </div>
         <div>
           <label className="block text-sm font-medium">Descrição Curta *</label>
-          <textarea name="shortDescription" required placeholder="Breve descrição do produto..." className="mt-1 w-full rounded-lg border px-4 py-2.5" rows={2} />
+          <textarea name="shortDescription" required placeholder="Breve descrição..." className="mt-1 w-full rounded-lg border px-4 py-2.5" rows={2} />
         </div>
         <div>
           <label className="block text-sm font-medium">Descrição Longa</label>
-          <textarea name="longDescription" placeholder="Descrição detalhada com materiais, cuidados..." className="mt-1 w-full rounded-lg border px-4 py-2.5" rows={3} />
+          <textarea name="longDescription" placeholder="Descrição detalhada..." className="mt-1 w-full rounded-lg border px-4 py-2.5" rows={3} />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
@@ -83,11 +101,9 @@ export default async function AdminProdutoNovoPage() {
             <label className="block text-sm font-medium">Coleção</label>
             <select name="collectionId" className="mt-1 w-full rounded-lg border px-4 py-2.5">
               <option value="">Nenhuma</option>
-              <option value="gamer">Gamer Energy</option>
-              <option value="anime">Anime Pop</option>
-              <option value="home">Casa & Utilidades</option>
-              <option value="gifts">Presentes Personalizados</option>
-              <option value="auto">Auto Vintage</option>
+              <option value="gamer">Gamer</option><option value="anime">Anime</option>
+              <option value="home">Casa</option><option value="gifts">Presentes</option>
+              <option value="auto">Auto</option>
             </select>
           </div>
         </div>
@@ -100,24 +116,26 @@ export default async function AdminProdutoNovoPage() {
             <label className="block text-sm font-medium">Personalização</label>
             <select name="customizationLevel" defaultValue="simple" className="mt-1 w-full rounded-lg border px-4 py-2.5">
               <option value="none">Sem personalização</option>
-              <option value="simple">Simples (cor/tamanho)</option>
-              <option value="moderate">Moderada (cor+tamanho+texto)</option>
+              <option value="simple">Simples</option>
+              <option value="moderate">Moderada</option>
               <option value="on_request">Sob consulta</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium">Tempo Produção (h)</label>
+            <label className="block text-sm font-medium">Tempo (h)</label>
             <input name="estimatedHours" type="number" defaultValue={2} className="mt-1 w-full rounded-lg border px-4 py-2.5" />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium">Imagens (URLs — uma por linha)</label>
-          <textarea name="imageUrls" placeholder={"https://exemplo.com/foto1.jpg\nhttps://exemplo.com/foto2.jpg"} className="mt-1 w-full rounded-lg border px-4 py-2.5 text-sm" rows={3} />
-          <p className="mt-1 text-xs text-muted-foreground">Cole os links das imagens do produto. Upload direto será adicionado em breve.</p>
-        </div>
+
+        <ImageUpload images={images} onChange={setImages} />
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
         <div className="flex gap-3 pt-4">
-          <button type="submit" className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground">Criar Produto</button>
-          <a href="/admin/produtos" className="rounded-lg border px-6 py-2.5 text-sm">Cancelar</a>
+          <button type="submit" disabled={saving} className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {saving ? 'Criando...' : 'Criar Produto'}
+          </button>
+          <button type="button" onClick={() => router.push('/admin/produtos')} className="rounded-lg border px-6 py-2.5 text-sm">Cancelar</button>
         </div>
       </form>
     </div>
