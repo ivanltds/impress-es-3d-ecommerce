@@ -129,7 +129,7 @@ export async function purchaseLabel(
     // Step 1: Add to cart
     const body = {
       from: { name: 'Impressao 3D', address: 'Rua Exemplo 123', city: 'Osasco', postal_code: FROM_CEP_FORMATTED },
-      to: { name: toName, address: toAddress, city: toCity, postal_code: cep.replace(/\D/g, '') },
+      to: { name: toName, address: toAddress, city: toCity, postal_code: cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2') },
       service: Number(serviceId),
       products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },
