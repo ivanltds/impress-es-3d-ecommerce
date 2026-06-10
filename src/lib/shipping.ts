@@ -111,7 +111,13 @@ export async function calculateShipping(cep: string): Promise<ShippingOption[]> 
 }
 
 // ─── Label Purchase ───
-export async function purchaseLabel(cep: string, serviceId: string): Promise<{ tracking: string; price: number } | null> {
+export async function purchaseLabel(
+  cep: string,
+  serviceId: string,
+  toName: string,
+  toAddress: string,
+  toCity: string
+): Promise<{ tracking: string; price: number } | null> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   if (!token) {
     console.warn('[shipping] MELHOR_ENVIO_TOKEN not set — cannot purchase label')
@@ -121,8 +127,8 @@ export async function purchaseLabel(cep: string, serviceId: string): Promise<{ t
   try {
     // Step 1: Add to cart
     const body = {
-      from: { postal_code: FROM_CEP },
-      to: { postal_code: cep.replace(/\D/g, '') },
+      from: { name: 'Impressao 3D', address: 'Rua Exemplo 123', city: 'Osasco', postal_code: FROM_CEP },
+      to: { name: toName, address: toAddress, city: toCity, postal_code: cep.replace(/\D/g, '') },
       service: Number(serviceId),
       products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },

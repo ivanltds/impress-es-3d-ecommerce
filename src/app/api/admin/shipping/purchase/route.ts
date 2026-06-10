@@ -19,8 +19,27 @@ export async function POST(request: NextRequest) {
   const { orderId, cep, serviceId } = await request.json()
   if (!orderId || !cep || !serviceId) return NextResponse.json({ error: 'orderId, cep e serviceId obrigatórios' }, { status: 400 })
 
+  // Fetch order for address details
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: { select: { name: true } } },
+  })
+  if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
+
+  // Extract address info
+  let toName = order.user?.name || 'Cliente'
+  let toAddress = 'Endereco'
+  let toCity = 'Cidade'
+  try {
+    if (order.notes) {
+      const addr = JSON.parse(order.notes)
+      toAddress = [addr.street, addr.number].filter(Boolean).join(', ') || 'Endereco'
+      toCity = addr.city || 'Cidade'
+    }
+  } catch {}
+
   // Purchase the label via Melhor Envio
-  const label = await purchaseLabel(cep, serviceId)
+  const label = await purchaseLabel(cep, serviceId, toName, toAddress, toCity)
   if (!label) {
     console.error('[purchase] Label purchase returned null')
     return NextResponse.json({ success: false, error: 'Falha ao comprar etiqueta. Verifique os logs do servidor.' }, { status: 500 })
