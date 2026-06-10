@@ -9,6 +9,11 @@ import { Check, CreditCard, QrCode, ArrowLeft, ArrowRight } from 'lucide-react'
 
 interface CartItem { id: string; productId: string; name: string; price: number; qty: number }
 
+const UF_LIST = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
+  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+]
+
 export default function CheckoutPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
@@ -26,6 +31,7 @@ export default function CheckoutPage() {
   const [district, setDistrict] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('SP')
+  const [document, setDocument] = useState('') // CPF sem pontuação
 
   useEffect(() => {
     const stored = localStorage.getItem('cart')
@@ -56,6 +62,7 @@ export default function CheckoutPage() {
         shippingCost: shipping,
         paymentMethod,
         cep, street, number, district, city, state,
+        document: document.replace(/\D/g, ''),
       }),
     })
     const data = await res.json()
@@ -90,11 +97,24 @@ export default function CheckoutPage() {
             <input placeholder="CEP" value={cep} onChange={(e) => setCep(e.target.value)} className="rounded-lg border px-4 py-3" data-testid="cep-input" />
             <button onClick={handleCalcFrete} className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground" data-testid="calc-frete">Calcular Frete</button>
           </div>
-          <input placeholder="Rua" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
+          <input placeholder="Rua / Avenida" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
           <div className="grid gap-4 sm:grid-cols-3">
             <input placeholder="Número" value={number} onChange={(e) => setNumber(e.target.value)} className="rounded-lg border px-4 py-3" />
             <input placeholder="Bairro" value={district} onChange={(e) => setDistrict(e.target.value)} className="rounded-lg border px-4 py-3" />
             <input placeholder="Cidade" value={city} onChange={(e) => setCity(e.target.value)} className="rounded-lg border px-4 py-3" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <select value={state} onChange={(e) => setState(e.target.value)} className="rounded-lg border px-4 py-3 text-sm bg-background">
+              {UF_LIST.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
+            </select>
+            <input
+              placeholder="CPF (somente números)"
+              value={document}
+              onChange={(e) => setDocument(e.target.value.replace(/\D/g, '').slice(0, 11))}
+              maxLength={11}
+              className="rounded-lg border px-4 py-3"
+              data-testid="document-input"
+            />
           </div>
         </div>
       )}

@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
     const session = await auth()
     const userId = session?.user?.id
     const body = await request.json()
-    const { items, shippingCost, paymentMethod, cep, street, number, district, city, state } = body
+    const {
+      items, shippingCost, paymentMethod,
+      cep, street, number, district, city, state, document,
+    } = body
 
     if (!items?.length || !paymentMethod) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 })
@@ -34,6 +37,11 @@ export async function POST(request: NextRequest) {
     // Capture UTM from cookies/referrer
     const sourceChannel = request.headers.get('referer')?.includes('instagram') ? 'instagram' : 'direct'
 
+    // If user is logged in and provided document (CPF), persist it
+    if (userId && document) {
+      await prisma.user.update({ where: { id: userId }, data: { document } }).catch(() => {})
+    }
+
     const order = await prisma.order.create({
       data: {
         userId,
@@ -46,8 +54,12 @@ export async function POST(request: NextRequest) {
         total,
         currency: 'BRL',
         sourceChannel,
-        cep: cep || null,
-        notes: JSON.stringify({ street, number, district, city, state }),
+        cep:             cep      || null,
+        shippingStreet:  street   || null,
+        shippingNumber:  number   || null,
+        shippingDistrict: district || null,
+        shippingCity:    city     || null,
+        shippingState:   state    || null,
         items: {
           create: items.map((i: { productId: string; name: string; sku?: string; qty: number; price: number }) => ({
             productId: i.productId,

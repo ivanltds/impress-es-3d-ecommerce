@@ -18,6 +18,7 @@ model User {
   passwordHash        String?   // hashed password (NextAuth handles via adapter)
   image               String?
   phone               String?
+  document            String?   // CPF sem pontuação
   role                String    @default("customer") // admin, operator, partner, customer
   marketingConsent    Boolean   @default(false)
   preferredTheme      String?   // theme_key
@@ -202,6 +203,12 @@ model Order {
   notes            String?
   themeSnapshot    String?
   cep              String?  // CEP for shipping label generation
+  shippingStreet   String?
+  shippingNumber   String?
+  shippingDistrict String?
+  shippingCity     String?
+  shippingState    String?
+  trackingCode     String?  // código de rastreio Melhor Envio
   user             User?     @relation(fields: [userId], references: [id])
   items            OrderItem[]
   createdAt        DateTime  @default(now())

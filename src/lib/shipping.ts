@@ -207,14 +207,22 @@ export type LabelResult =
   | { success: true; tracking: string; price: number }
   | { success: false; error: string }
 
+export interface ToAddressData {
+  address: string   // rua
+  number:  string
+  district: string  // bairro
+  city:     string
+  state:    string  // UF ex: "SP"
+}
+
 // fromAddress: endereço de origem da loja (do BD)
-// customer: dados do destinatário para preencher campos obrigatórios da Melhor Envio
+// customer: dados do destinatário (nome, phone, email, document)
+// toDetails: endereço completo do destinatário
 export async function purchaseLabel(
   cep: string,
   serviceId: string,
   customer: CustomerData,
-  toAddress: string,
-  toCity: string,
+  toDetails: ToAddressData,
   fromAddress?: StoreAddressData
 ): Promise<LabelResult> {
   const token = process.env.MELHOR_ENVIO_TOKEN
@@ -243,11 +251,11 @@ export async function purchaseLabel(
     phone: (customer.phone || '').replace(/\D/g, '') || '11999999999',
     email: customer.email || 'cliente@email.com',
     document: (customer.document || '').replace(/\D/g, '') || '00000000000',
-    address: toAddress || 'Endereco',
-    number: 's/n',
-    district: 'Centro',
-    city: toCity || 'Cidade',
-    state_abbr: 'SP',
+    address: toDetails.address || 'Endereco',
+    number:   toDetails.number  || 's/n',
+    district: toDetails.district || 'Centro',
+    city:     toDetails.city    || 'Cidade',
+    state_abbr: (toDetails.state || 'SP').toUpperCase(),
     country_id: 'BR',
     postal_code: formatCep(cep),
   }
