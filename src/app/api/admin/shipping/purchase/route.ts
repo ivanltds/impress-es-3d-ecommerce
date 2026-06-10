@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
     }
   } catch {}
 
+  console.log('[purchase] Attempting purchase with:', { cep, serviceId, toName, toAddress, toCity })
+
   // Purchase the label via Melhor Envio
   const label = await purchaseLabel(cep, serviceId, toName, toAddress, toCity)
   if (!label) {
