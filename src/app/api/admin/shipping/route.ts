@@ -11,7 +11,7 @@ export async function GET() {
   const orders = await prisma.order.findMany({
     where: {
       paymentStatus: 'paid',
-      fulfillmentStatus: { in: ['shipped', 'posted', 'in_transit', 'delivered'] },
+      fulfillmentStatus: { in: ['shipped', 'awaiting_pickup', 'posted', 'in_transit', 'delivered'] },
     },
     orderBy: { createdAt: 'desc' },
     include: { items: true, user: { select: { name: true } } },
@@ -21,7 +21,8 @@ export async function GET() {
     // Map fulfillmentStatus to shipping kanban column
     const shippingStatus =
       o.fulfillmentStatus === 'delivered' ? 'delivered' :
-      o.fulfillmentStatus === 'in_transit' ? 'in_transit' : 'posted'
+      o.fulfillmentStatus === 'in_transit' ? 'in_transit' :
+      o.fulfillmentStatus === 'posted' ? 'posted' : 'awaiting_pickup'
     return {
       id: o.id,
       orderId: o.id,

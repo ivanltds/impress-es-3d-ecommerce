@@ -1,0 +1,140 @@
+<svg viewBox="0 0 820 720" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif" font-size="13" role="img">
+  <title>Fluxo de Vendas Ponta a Ponta — 3DPrint Store</title>
+  <desc>Dois caminhos de entrada (Lead via WhatsApp e Compra Direta via Site) convergindo para Produção, Envio e Entrega.</desc>
+
+  <rect width="820" height="720" fill="#f8f8f8" rx="12"/>
+
+  <!-- Legend -->
+  <rect x="30" y="18" width="14" height="14" rx="3" fill="#6366f1" opacity="0.7"/>
+  <text x="50" y="29" fill="#555" font-size="11">Caminho Lead</text>
+  <rect x="140" y="18" width="14" height="14" rx="3" fill="#10b981" opacity="0.7"/>
+  <text x="160" y="29" fill="#555" font-size="11">Compra Direta</text>
+  <rect x="255" y="18" width="14" height="14" rx="3" fill="#f59e0b" opacity="0.7"/>
+  <text x="275" y="29" fill="#555" font-size="11">Admin — Leads</text>
+  <rect x="380" y="18" width="14" height="14" rx="3" fill="#0ea5e9" opacity="0.7"/>
+  <text x="400" y="29" fill="#555" font-size="11">Produção</text>
+  <rect x="475" y="18" width="14" height="14" rx="3" fill="#8b5cf6" opacity="0.7"/>
+  <text x="495" y="29" fill="#555" font-size="11">Envio</text>
+
+  <!-- ── ENTRADA ── -->
+  <text x="135" y="62" text-anchor="middle" fill="#888" font-size="11" font-weight="600" letter-spacing="1">ENTRADA</text>
+
+  <rect x="30" y="72" width="210" height="64" rx="8" fill="#6366f1" opacity="0.1" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="135" y="95" text-anchor="middle" fill="#6366f1" font-weight="700">Lead — WhatsApp / Instagram</text>
+  <text x="135" y="112" text-anchor="middle" fill="#555" font-size="11">Cliente entra em contato</text>
+  <text x="135" y="126" text-anchor="middle" fill="#555" font-size="11">Salvo em tabela Lead (BD)</text>
+
+  <rect x="30" y="158" width="210" height="64" rx="8" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="1.5"/>
+  <text x="135" y="181" text-anchor="middle" fill="#10b981" font-weight="700">Compra Direta — Site</text>
+  <text x="135" y="198" text-anchor="middle" fill="#555" font-size="11">Catálogo → PDP → Carrinho</text>
+  <text x="135" y="212" text-anchor="middle" fill="#555" font-size="11">Checkout (endereço + frete)</text>
+
+  <!-- arrows entrada → next col -->
+  <line x1="240" y1="104" x2="252" y2="104" stroke="#6366f1" stroke-width="1.5" marker-end="url(#ap)"/>
+  <line x1="240" y1="190" x2="252" y2="190" stroke="#10b981" stroke-width="1.5" marker-end="url(#ag)"/>
+
+  <!-- ── KANBAN LEADS ── -->
+  <text x="400" y="62" text-anchor="middle" fill="#888" font-size="11" font-weight="600" letter-spacing="1">KANBAN LEADS (ADMIN)</text>
+
+  <rect x="254" y="72" width="84" height="40" rx="6" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="296" y="89" text-anchor="middle" fill="#f59e0b" font-weight="600" font-size="11">Novo</text>
+  <text x="296" y="103" text-anchor="middle" fill="#666" font-size="10">recebido</text>
+  <text x="350" y="97" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="362" y="72" width="84" height="40" rx="6" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="404" y="89" text-anchor="middle" fill="#f59e0b" font-weight="600" font-size="11">Atendimento</text>
+  <text x="404" y="103" text-anchor="middle" fill="#666" font-size="10">negociação</text>
+  <text x="458" y="97" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="470" y="72" width="84" height="40" rx="6" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="512" y="89" text-anchor="middle" fill="#f59e0b" font-weight="600" font-size="11">Aguard. Pgto</text>
+  <text x="512" y="103" text-anchor="middle" fill="#666" font-size="10">proposta</text>
+  <text x="566" y="97" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="578" y="72" width="84" height="40" rx="6" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="620" y="89" text-anchor="middle" fill="#f59e0b" font-weight="600" font-size="11">Convertido</text>
+  <text x="620" y="103" text-anchor="middle" fill="#666" font-size="10">→ pedido</text>
+
+  <!-- Checkout box -->
+  <rect x="254" y="158" width="408" height="52" rx="8" fill="#10b981" opacity="0.08" stroke="#10b981" stroke-width="1.5"/>
+  <text x="458" y="181" text-anchor="middle" fill="#10b981" font-weight="700">Checkout</text>
+  <text x="458" y="198" text-anchor="middle" fill="#555" font-size="11">Frete real (Melhor Envio) · Pagamento · Pedido 3DP-XXXXX</text>
+
+  <!-- leads convertido → checkout -->
+  <path d="M620,112 L620,148 Q620,158 610,158" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" fill="none" marker-end="url(#ay)"/>
+
+  <!-- checkout → order -->
+  <line x1="458" y1="210" x2="458" y2="248" stroke="#aaa" stroke-width="1.5" marker-end="url(#ab)"/>
+
+  <!-- ── PEDIDO ── -->
+  <rect x="200" y="250" width="516" height="50" rx="8" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="458" y="271" text-anchor="middle" fill="#222" font-weight="700" font-size="14">Pedido Criado — paymentStatus: paid</text>
+  <text x="458" y="289" text-anchor="middle" fill="#666" font-size="11">fulfillmentStatus: unfulfilled · OrderItems: productionStatus: pending</text>
+
+  <line x1="458" y1="300" x2="458" y2="336" stroke="#aaa" stroke-width="1.5" marker-end="url(#ab)"/>
+
+  <!-- ── KANBAN PRODUÇÃO ── -->
+  <text x="458" y="354" text-anchor="middle" fill="#888" font-size="11" font-weight="600" letter-spacing="1">KANBAN PRODUÇÃO (ADMIN)</text>
+
+  <rect x="94" y="362" width="96" height="44" rx="6" fill="#0ea5e9" opacity="0.12" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="142" y="381" text-anchor="middle" fill="#0ea5e9" font-weight="600" font-size="11">Aguardando</text>
+  <text x="142" y="396" text-anchor="middle" fill="#666" font-size="10">pending</text>
+  <text x="202" y="387" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="214" y="362" width="96" height="44" rx="6" fill="#0ea5e9" opacity="0.12" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="262" y="381" text-anchor="middle" fill="#0ea5e9" font-weight="600" font-size="11">Em Produção</text>
+  <text x="262" y="396" text-anchor="middle" fill="#666" font-size="10">in_progress</text>
+  <text x="322" y="387" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="334" y="362" width="96" height="44" rx="6" fill="#0ea5e9" opacity="0.12" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="382" y="381" text-anchor="middle" fill="#0ea5e9" font-weight="600" font-size="11">Acabamento</text>
+  <text x="382" y="396" text-anchor="middle" fill="#666" font-size="10">finishing</text>
+  <text x="442" y="387" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="454" y="362" width="96" height="44" rx="6" fill="#0ea5e9" opacity="0.12" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="502" y="381" text-anchor="middle" fill="#0ea5e9" font-weight="600" font-size="11">Embalado</text>
+  <text x="502" y="396" text-anchor="middle" fill="#666" font-size="10">packed</text>
+  <text x="562" y="387" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="574" y="362" width="108" height="44" rx="6" fill="#0ea5e9" opacity="0.12" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="628" y="381" text-anchor="middle" fill="#0ea5e9" font-weight="600" font-size="11">Pronto p/ Envio</text>
+  <text x="628" y="396" text-anchor="middle" fill="#666" font-size="10">fulfillment: shipped</text>
+
+  <!-- comprar etiqueta -->
+  <rect x="574" y="412" width="108" height="22" rx="4" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="628" y="426" text-anchor="middle" fill="#8b5cf6" font-size="10" font-weight="600">🏷 Comprar Etiqueta</text>
+
+  <line x1="628" y1="434" x2="628" y2="464" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#av)"/>
+
+  <!-- ── KANBAN ENVIO ── -->
+  <text x="458" y="482" text-anchor="middle" fill="#888" font-size="11" font-weight="600" letter-spacing="1">KANBAN ENVIO (ADMIN)</text>
+
+  <rect x="178" y="490" width="120" height="44" rx="6" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="238" y="509" text-anchor="middle" fill="#b45309" font-weight="600" font-size="11">Aguard. Postagem</text>
+  <text x="238" y="524" text-anchor="middle" fill="#666" font-size="10">awaiting_pickup</text>
+  <text x="310" y="515" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="322" y="490" width="100" height="44" rx="6" fill="#8b5cf6" opacity="0.12" stroke="#8b5cf6" stroke-width="1.2"/>
+  <text x="372" y="509" text-anchor="middle" fill="#8b5cf6" font-weight="600" font-size="11">Postado</text>
+  <text x="372" y="524" text-anchor="middle" fill="#666" font-size="10">posted</text>
+  <text x="434" y="515" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="446" y="490" width="100" height="44" rx="6" fill="#8b5cf6" opacity="0.12" stroke="#8b5cf6" stroke-width="1.2"/>
+  <text x="496" y="509" text-anchor="middle" fill="#8b5cf6" font-weight="600" font-size="11">Em Trânsito</text>
+  <text x="496" y="524" text-anchor="middle" fill="#666" font-size="10">in_transit</text>
+  <text x="558" y="515" text-anchor="middle" fill="#aaa" font-size="15">→</text>
+  <rect x="570" y="490" width="100" height="44" rx="6" fill="#8b5cf6" opacity="0.12" stroke="#8b5cf6" stroke-width="1.2"/>
+  <text x="620" y="509" text-anchor="middle" fill="#8b5cf6" font-weight="600" font-size="11">Entregue</text>
+  <text x="620" y="524" text-anchor="middle" fill="#666" font-size="10">delivered</text>
+
+  <!-- etiqueta → aguard postagem -->
+  <path d="M628,464 Q628,480 510,480 Q400,480 300,490" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4,3" fill="none" marker-end="url(#av)"/>
+
+  <!-- entregue → fim -->
+  <line x1="620" y1="534" x2="620" y2="570" stroke="#aaa" stroke-width="1.5" marker-end="url(#ab)"/>
+
+  <!-- ── FINAL ── -->
+  <rect x="420" y="572" width="360" height="44" rx="8" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="1.8"/>
+  <text x="600" y="591" text-anchor="middle" fill="#10b981" font-weight="700" font-size="13">✅ Venda Concluída</text>
+  <text x="600" y="608" text-anchor="middle" fill="#555" font-size="11">fulfillmentStatus: delivered · sai dos pedidos abertos</text>
+
+  <!-- markers -->
+  <defs>
+    <marker id="ap" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6366f1"/></marker>
+    <marker id="ag" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#10b981"/></marker>
+    <marker id="ay" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b"/></marker>
+    <marker id="ab" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#aaa"/></marker>
+    <marker id="av" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8b5cf6"/></marker>
+  </defs>
+</svg>

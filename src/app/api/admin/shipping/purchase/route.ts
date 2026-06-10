@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   await prisma.order.update({
     where: { id: orderId },
     data: {
-      fulfillmentStatus: 'shipped',
+      fulfillmentStatus: 'awaiting_pickup',
       notes: `Etiqueta: ${label.tracking} — R$ ${label.price.toFixed(2)}`,
     },
   })
