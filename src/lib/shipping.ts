@@ -231,7 +231,7 @@ export async function purchaseLabel(
       from: { name: originName, address: originStreet, city: originCity, postal_code: originCep },
       to: { name: toName, address: toAddress, city: toCity, postal_code: formatCep(cep) },
       service: Number(serviceId),
-      products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
+      products: [{ name: 'Produto 3D', quantity: 1, unitary_value: 50, weight: 0.3, width: 15, height: 10, length: 20 }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },
     }
     console.log('[shipping] cart body:', JSON.stringify({ from: body.from, to: body.to, service: body.service }))
