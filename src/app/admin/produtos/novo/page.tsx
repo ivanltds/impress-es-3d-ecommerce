@@ -18,6 +18,10 @@ export default async function AdminProdutoNovoPage() {
     const material = formData.get('material') as string
     const customizationLevel = formData.get('customizationLevel') as string
     const estimatedHours = parseInt(formData.get('estimatedHours') as string) || 2
+    const imageUrls = formData.get('imageUrls') as string
+    const images = imageUrls
+      ? imageUrls.split('\n').map((u) => u.trim()).filter(Boolean)
+      : []
 
     await prisma.product.create({
       data: {
@@ -32,7 +36,7 @@ export default async function AdminProdutoNovoPage() {
         customizationLevel: customizationLevel || 'simple',
         isCustomizable: customizationLevel !== 'none',
         estimatedProductionTime: estimatedHours,
-        images: [],
+        images,
         productType: 'simple',
       },
     })
@@ -105,6 +109,11 @@ export default async function AdminProdutoNovoPage() {
             <label className="block text-sm font-medium">Tempo Produção (h)</label>
             <input name="estimatedHours" type="number" defaultValue={2} className="mt-1 w-full rounded-lg border px-4 py-2.5" />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Imagens (URLs — uma por linha)</label>
+          <textarea name="imageUrls" placeholder={"https://exemplo.com/foto1.jpg\nhttps://exemplo.com/foto2.jpg"} className="mt-1 w-full rounded-lg border px-4 py-2.5 text-sm" rows={3} />
+          <p className="mt-1 text-xs text-muted-foreground">Cole os links das imagens do produto. Upload direto será adicionado em breve.</p>
         </div>
         <div className="flex gap-3 pt-4">
           <button type="submit" className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground">Criar Produto</button>
