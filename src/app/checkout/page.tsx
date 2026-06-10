@@ -3,7 +3,7 @@
 // ─── M03: Checkout Page ───
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { calculateShipping, type ShippingOption } from '@/lib/shipping-mock'
+import type { ShippingOption } from '@/lib/shipping'
 import { getPaymentProvider } from '@/lib/payment-mock'
 import { Check, CreditCard, QrCode, ArrowLeft, ArrowRight } from 'lucide-react'
 
@@ -37,9 +37,12 @@ export default function CheckoutPage() {
   const total = subtotal + shipping
 
   async function handleCalcFrete() {
-    const opts = await calculateShipping(cep)
-    setShippingOptions(opts)
-    if (opts.length > 0) setSelectedShipping(opts[0])
+    const res = await fetch(`/api/shipping?cep=${cep.replace(/\D/g, '')}`)
+    if (res.ok) {
+      const opts = await res.json()
+      setShippingOptions(opts)
+      if (opts.length > 0) setSelectedShipping(opts[0])
+    }
   }
 
   async function handleConfirm() {
