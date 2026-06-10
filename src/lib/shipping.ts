@@ -114,25 +114,34 @@ export async function calculateShipping(cep: string): Promise<ShippingOption[]> 
 // For purchase flow — only returns real API data, no fallback
 export async function getRealShippingOptions(cep: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
+  console.log('[shipping] getRealShippingOptions token present:', !!token)
   if (!token) return []
 
   try {
-    const res = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/calculate`, {
+    const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
+    const body = {
+      from: { postal_code: FROM_CEP },
+      to: { postal_code: cep.replace(/\D/g, '') },
+      products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
+      options: { receipt: false, own_hand: false },
+    }
+    console.log('[shipping] calculate request:', JSON.stringify({ url, body }))
+    const res = await fetch(url, {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        from: { postal_code: FROM_CEP },
-        to: { postal_code: cep.replace(/\D/g, '') },
-        products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
-        options: { receipt: false, own_hand: false },
-      }),
+      body: JSON.stringify(body),
     })
+    const text = await res.text()
+    console.log('[shipping] calculate response:', res.status, text.slice(0, 300))
     if (!res.ok) return []
-    const data = await res.json()
-    return data
+    const data = JSON.parse(text)
+    const result = data
       .filter((item: any) => !item.error && item.price > 0)
       .map((item: any) => ({ id: String(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
-  } catch {
+    console.log('[shipping] parsed services:', JSON.stringify(result))
+    return result
+  } catch (err) {
+    console.error('[shipping] getRealShippingOptions error:', err)
     return []
   }
 }
