@@ -15,6 +15,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { WhatsAppButton } from '@/components/shared/whatsapp-button'
+import { LeadForm } from '@/components/shop/lead-form'
 
 const COLLECTIONS = [
   { slug: 'gamer', name: 'Gamer Energy', desc: 'Setup com atitude. Neon, energia e performance.', icon: Gamepad2 },
@@ -187,6 +188,13 @@ export default function HomePage() {
           ))}
         </div>
       </motion.section>
+
+      {/* ─── Lead Form Section ─── */}
+      <section className="bg-muted/30 px-4 py-20">
+        <div className="mx-auto max-w-lg">
+          <LeadForm />
+        </div>
+      </section>
 
       <WhatsAppButton />
     </motion.div>
