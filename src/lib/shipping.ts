@@ -10,7 +10,8 @@ export interface ShippingOption {
 }
 
 const MELHOR_ENVIO_URL = 'https://melhorenvio.com.br/api/v2'
-const FROM_CEP = '06110000' // Osasco/SP — origem da produção
+const FROM_CEP = '06110000'
+const FROM_CEP_FORMATTED = '06110-000' // Osasco/SP — com traço para API de compra
 
 async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
@@ -127,7 +128,7 @@ export async function purchaseLabel(
   try {
     // Step 1: Add to cart
     const body = {
-      from: { name: 'Impressao 3D', address: 'Rua Exemplo 123', city: 'Osasco', postal_code: FROM_CEP },
+      from: { name: 'Impressao 3D', address: 'Rua Exemplo 123', city: 'Osasco', postal_code: FROM_CEP_FORMATTED },
       to: { name: toName, address: toAddress, city: toCity, postal_code: cep.replace(/\D/g, '') },
       service: Number(serviceId),
       products: [{ name: 'Produto 3D', quantity: 1, weight: 0.3, width: 15, height: 10, length: 20 }],
