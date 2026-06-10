@@ -60,13 +60,17 @@ export default function AdminProdutosPage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="admin-products-table">
           {products.map((p) => (
             <Link key={p.id} href={`/admin/produtos/${p.id}`} className="group rounded-xl border bg-card transition-all hover:shadow-lg hover:border-primary/30 overflow-hidden">
-              <div className="aspect-square bg-gradient-to-br from-primary/5 to-purple-500/5 flex items-center justify-center">
-                <Package className="h-16 w-16 text-primary/20 transition-transform group-hover:scale-110" />
+              <div className="aspect-square bg-gradient-to-br from-primary/5 to-purple-500/5 flex items-center justify-center relative">
+                {p.images && p.images.length > 0 ? (
+                  <img src={p.images[0]} alt={p.name} className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105" />
+                ) : (
+                  <Package className="h-16 w-16 text-primary/20 transition-transform group-hover:scale-110" />
+                )}
                 {p.isCustomizable && (
-                  <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-medium text-primary-foreground">Personalizável</span>
+                  <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-medium text-primary-foreground z-10">Personalizável</span>
                 )}
                 {p.isFeatured && (
-                  <span className="absolute right-3 top-3 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">Destaque</span>
+                  <span className="absolute right-3 top-3 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 z-10">Destaque</span>
                 )}
               </div>
               <div className="p-4">
@@ -100,9 +104,13 @@ export default function AdminProdutosPage() {
               {products.map((p) => (
                 <tr key={p.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => window.location.href = `/admin/produtos/${p.id}`}>
                   <td className="px-4 py-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10">
-                      <Package className="h-4 w-4 text-primary/50" />
-                    </div>
+                    {p.images && p.images.length > 0 ? (
+                      <img src={p.images[0]} alt={p.name} className="h-8 w-8 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10">
+                        <Package className="h-4 w-4 text-primary/50" />
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{p.name}</p>

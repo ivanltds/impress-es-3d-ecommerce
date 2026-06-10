@@ -1,23 +1,15 @@
-// ─── M04: Secure Image Upload ───
+// ─── M04: Image Upload (base64 storage) ───
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-import crypto from 'crypto'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = 2 * 1024 * 1024 // 2MB for base64 storage
 
-// Magic bytes for common image formats
 const VALID_SIGNATURES = ['ffd8ff', '89504e47', '52494646', '47494638']
 
 function validateMagicBytes(buffer: Buffer): boolean {
   const hex = buffer.slice(0, 4).toString('hex')
   return VALID_SIGNATURES.some((sig) => hex.startsWith(sig))
-}
-
-function sanitizeFilename(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100)
 }
 
 export async function POST(request: NextRequest) {
@@ -32,12 +24,12 @@ export async function POST(request: NextRequest) {
 
     // Validate type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: `Tipo não permitido. Use: ${ALLOWED_TYPES.join(', ')}` }, { status: 400 })
+      return NextResponse.json({ error: `Tipo não permitido. Use: JPG, PNG, WebP ou GIF` }, { status: 400 })
     }
 
     // Validate size
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'Arquivo muito grande. Máximo: 5MB' }, { status: 400 })
+      return NextResponse.json({ error: 'Arquivo muito grande. Máximo: 2MB' }, { status: 400 })
     }
 
     // Validate magic bytes (prevent extension spoofing)
@@ -46,23 +38,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Arquivo inválido — não é uma imagem real' }, { status: 400 })
     }
 
-    // Generate safe filename
-    const ext = path.extname(file.name).toLowerCase() || '.jpg'
-    const safeName = `${crypto.randomBytes(16).toString('hex')}${ext}`
-    // Use /tmp in production (Vercel), public/ in development
-    const isProd = process.env.NODE_ENV === 'production'
-    const uploadDir = isProd
-      ? '/tmp/uploads'
-      : path.join(process.cwd(), 'public', 'uploads')
+    // Convert to base64 data URL (works everywhere, no disk dependency)
+    const b64 = bytes.toString('base64')
+    const url = `data:${file.type};base64,${b64}`
 
-    // Ensure upload directory exists
-    await mkdir(uploadDir, { recursive: true })
-    await writeFile(path.join(uploadDir, safeName), bytes)
-
-    // Return API route URL for serving the file
-    const url = isProd
-      ? `/api/uploads/${safeName}`
-      : `/uploads/${safeName}`
     return NextResponse.json({ url, name: file.name, size: file.size })
   } catch (err) {
     console.error('[upload] Error:', err)

@@ -17,7 +17,18 @@ export function ProductCard({ product }: { product: ProductWithCategory }) {
       >
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-purple-500/5 transition-colors group-hover:from-primary/10 group-hover:to-purple-500/10">
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none'
+                ;(e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden')
+              }}
+            />
+          ) : null}
+          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-purple-500/5 transition-colors group-hover:from-primary/10 group-hover:to-purple-500/10 ${product.images && product.images.length > 0 ? 'hidden' : ''}`}>
             <div className="text-6xl text-primary/20 transition-transform group-hover:scale-110">
               <Star className="h-16 w-16" />
             </div>
