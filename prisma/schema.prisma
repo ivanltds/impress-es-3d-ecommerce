@@ -128,6 +128,24 @@ model Product {
   updatedAt              DateTime @updatedAt
 }
 
+// ─── M04: Leads ───
+
+model Lead {
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @default("")
+  phone              String   @default("")
+  source             String   @default("website")
+  interestCollection String   @default("")
+  message            String   @default("")
+  status             String   @default("novo")
+  notes              String?
+  orderId            String?
+  paymentLink        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 // ─── Outros modelos ───
 
 model Address {

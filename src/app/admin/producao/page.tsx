@@ -27,7 +27,7 @@ const COLUMNS: { key: Status; label: string; color: string }[] = [
   { key: 'in_progress', label: 'Em Produção', color: 'bg-blue-50 border-blue-200' },
   { key: 'finishing', label: 'Acabamento', color: 'bg-purple-50 border-purple-200' },
   { key: 'packed', label: 'Embalado', color: 'bg-green-50 border-green-200' },
-  { key: 'shipped', label: 'Enviado', color: 'bg-gray-50 border-gray-200' },
+  { key: 'shipped', label: 'Enviado p/ Entrega', color: 'bg-gray-50 border-gray-200' },
 ]
 
 const STATUS_MAP: Record<string, Status> = {

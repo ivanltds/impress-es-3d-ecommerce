@@ -9,24 +9,25 @@ export function LeadForm({ onClose }: { onClose?: () => void }) {
   const [collection, setCollection] = useState('')
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    const lead = {
-      id: Date.now().toString(),
-      name,
-      phone: whatsapp,
-      interestCollection: collection,
-      message,
-      source: 'website',
-      status: 'novo',
-      createdAt: new Date().toISOString(),
-    }
-    const existing = JSON.parse(localStorage.getItem('leads') || '[]')
-    existing.push(lead)
-    localStorage.setItem('leads', JSON.stringify(existing))
+    setSaving(true)
+    await fetch('/api/admin/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone: whatsapp,
+        interestCollection: collection,
+        message,
+        source: window.location.search.includes('utm_source=instagram') ? 'instagram' : 'website',
+      }),
+    })
     setSent(true)
-    if (onClose) setTimeout(onClose, 2000)
+    if (onClose) setTimeout(onClose, 3000)
+    setSaving(false)
   }
 
   if (sent) {
@@ -64,8 +65,8 @@ export function LeadForm({ onClose }: { onClose?: () => void }) {
           <option value="auto">Auto Vintage</option>
         </select>
         <textarea placeholder="Descreva o que você imagina..." value={message} onChange={(e) => setMessage(e.target.value)} required rows={3} className="w-full rounded-lg border px-4 py-2.5 text-sm" />
-        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition-all hover:scale-105">
-          Enviar <MessageCircle className="h-4 w-4" />
+        <button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 disabled:opacity-50">
+          {saving ? 'Enviando...' : 'Enviar'} <MessageCircle className="h-4 w-4" />
         </button>
       </form>
     </div>
