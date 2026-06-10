@@ -3,7 +3,7 @@
 // Token gratuito: https://melhorenvio.com.br → Cadastro → API
 
 export interface ShippingOption {
-  id: string
+  id: number
   name: string
   price: number
   days: number
@@ -12,6 +12,18 @@ export interface ShippingOption {
 const MELHOR_ENVIO_URL = 'https://melhorenvio.com.br/api/v2'
 const FROM_CEP = '06110000'
 const FROM_CEP_FORMATTED = '06110-000' // Osasco/SP — com traço para API de compra
+
+// Melhor Envio exige User-Agent com nome do app e e-mail do desenvolvedor
+const ME_USER_AGENT = 'Impressao3DStore (ivanltds@gmail.com)'
+
+function meHeaders(token: string) {
+  return {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+    'User-Agent': ME_USER_AGENT,
+  }
+}
 
 async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
@@ -32,11 +44,7 @@ async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
 
     const res = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/calculate`, {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: meHeaders(token),
       body: JSON.stringify(body),
     })
 
@@ -48,9 +56,9 @@ async function fetchMelhorEnvio(cep: string): Promise<ShippingOption[]> {
     const data = await res.json()
 
     return data
-      .filter((item: { error?: string; price?: number }) => !item.error && item.price && item.price > 0)
-      .map((item: { id: string; name: string; price: number; delivery_time?: number; custom_delivery_time?: number }) => ({
-        id: String(item.id),
+      .filter((item: { error?: string; price?: number }) => !item.error && item.price && Number(item.price) > 0)
+      .map((item: { id: number; name: string; price: number; delivery_time?: number; custom_delivery_time?: number }) => ({
+        id: Number(item.id),
         name: item.name || 'Frete',
         price: Number(item.price),
         days: item.delivery_time || item.custom_delivery_time || 7,
@@ -71,39 +79,39 @@ function fallbackShipping(cep: string): ShippingOption[] {
   // Grande SP
   if (['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(prefix)) {
     return [
-      { id: 'pac', name: 'PAC — Correios', price: 14.9, days: 2 },
-      { id: 'sedex', name: 'SEDEX — Correios', price: 24.9, days: 1 },
+      { id: 1, name: 'PAC — Correios', price: 14.9, days: 2 },
+      { id: 2, name: 'SEDEX — Correios', price: 24.9, days: 1 },
     ]
   }
 
   // Interior SP
   if (['1'].includes(prefix[0])) {
     return [
-      { id: 'pac', name: 'PAC — Correios', price: 19.9, days: 4 },
-      { id: 'sedex', name: 'SEDEX — Correios', price: 32.9, days: 2 },
+      { id: 1, name: 'PAC — Correios', price: 19.9, days: 4 },
+      { id: 2, name: 'SEDEX — Correios', price: 32.9, days: 2 },
     ]
   }
 
   // RJ, MG, ES
   if (['2'].includes(prefix[0])) {
     return [
-      { id: 'pac', name: 'PAC — Correios', price: 26.9, days: 6 },
-      { id: 'sedex', name: 'SEDEX — Correios', price: 42.9, days: 3 },
+      { id: 1, name: 'PAC — Correios', price: 26.9, days: 6 },
+      { id: 2, name: 'SEDEX — Correios', price: 42.9, days: 3 },
     ]
   }
 
   // Sul
   if (['8', '9'].includes(prefix[0])) {
     return [
-      { id: 'pac', name: 'PAC — Correios', price: 29.9, days: 7 },
-      { id: 'sedex', name: 'SEDEX — Correios', price: 47.9, days: 4 },
+      { id: 1, name: 'PAC — Correios', price: 29.9, days: 7 },
+      { id: 2, name: 'SEDEX — Correios', price: 47.9, days: 4 },
     ]
   }
 
   // Norte, Nordeste, Centro-Oeste
   return [
-    { id: 'pac', name: 'PAC — Correios', price: 34.9, days: 10 },
-    { id: 'sedex', name: 'SEDEX — Correios', price: 54.9, days: 5 },
+    { id: 1, name: 'PAC — Correios', price: 34.9, days: 10 },
+    { id: 2, name: 'SEDEX — Correios', price: 54.9, days: 5 },
   ]
 }
 
@@ -128,7 +136,7 @@ export async function getRealShippingOptions(cep: string): Promise<ShippingOptio
     console.log('[shipping] calculate request:', JSON.stringify({ url, body }))
     const res = await fetch(url, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: meHeaders(token),
       body: JSON.stringify(body),
     })
     const text = await res.text()
@@ -136,8 +144,8 @@ export async function getRealShippingOptions(cep: string): Promise<ShippingOptio
     if (!res.ok) return []
     const data = JSON.parse(text)
     const result = data
-      .filter((item: any) => !item.error && item.price > 0)
-      .map((item: any) => ({ id: String(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
+      .filter((item: any) => !item.error && Number(item.price) > 0)
+      .map((item: any) => ({ id: Number(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
     console.log('[shipping] parsed services:', JSON.stringify(result))
     return result
   } catch (err) {
@@ -172,7 +180,7 @@ export async function purchaseLabel(
 
     const cartRes = await fetch(`${MELHOR_ENVIO_URL}/me/cart`, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: meHeaders(token),
       body: JSON.stringify(body),
     })
     if (!cartRes.ok) { console.error('[shipping] Cart error:', await cartRes.text()); return null }
@@ -183,7 +191,7 @@ export async function purchaseLabel(
     // Step 2: Checkout
     const checkoutRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/checkout`, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: meHeaders(token),
       body: JSON.stringify({ orders: [cartId] }),
     })
     if (!checkoutRes.ok) { console.error('[shipping] Checkout error:', await checkoutRes.text()); return null }
@@ -196,7 +204,7 @@ export async function purchaseLabel(
 
     const genRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/generate`, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: meHeaders(token),
       body: JSON.stringify({ orders: [orderId] }),
     })
     if (!genRes.ok) { console.error('[shipping] Generate error:', await genRes.text()); return null }
