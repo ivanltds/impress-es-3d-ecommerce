@@ -135,41 +135,60 @@ export async function calculateShipping(cep: string): Promise<ShippingOption[]> 
   return fetchMelhorEnvio(cep)
 }
 
-// For purchase flow — only returns real API data, no fallback
+// For purchase flow — throws on API error so caller can surface the real message
 export async function getRealShippingOptions(cep: string, fromCep?: string): Promise<ShippingOption[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   console.log('[shipping] getRealShippingOptions token present:', !!token)
-  if (!token) return []
+  if (!token) throw new Error('MELHOR_ENVIO_TOKEN não configurado na Vercel')
 
   const originCep = formatCep(fromCep || process.env.MELHOR_ENVIO_FROM_CEP || '06110-000')
 
-  try {
-    const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
-    const body = {
-      from: { postal_code: originCep },
-      to: { postal_code: cep.replace(/\D/g, '') },
-      products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
-      options: { receipt: false, own_hand: false },
-    }
-    console.log('[shipping] calculate request:', JSON.stringify({ url, from: originCep, to: cep }))
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: meHeaders(token),
-      body: JSON.stringify(body),
-    })
-    const text = await res.text()
-    console.log('[shipping] calculate response:', res.status, text.slice(0, 300))
-    if (!res.ok) return []
-    const data = JSON.parse(text)
-    const result = data
-      .filter((item: any) => !item.error && Number(item.price) > 0)
-      .map((item: any) => ({ id: Number(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
-    console.log('[shipping] parsed services:', JSON.stringify(result))
-    return result
-  } catch (err) {
-    console.error('[shipping] getRealShippingOptions error:', err)
-    return []
+  const url = `${MELHOR_ENVIO_URL}/me/shipment/calculate`
+  const body = {
+    from: { postal_code: originCep },
+    to: { postal_code: cep.replace(/\D/g, '') },
+    products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
+    options: { receipt: false, own_hand: false },
   }
+  console.log('[shipping] calculate request:', JSON.stringify({ url, from: originCep, to: cep }))
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: meHeaders(token),
+    body: JSON.stringify(body),
+  })
+  const text = await res.text()
+  console.log('[shipping] calculate response:', res.status, text.slice(0, 500))
+
+  if (!res.ok) {
+    // Extract readable error from Melhor Envio response
+    let apiMsg = `HTTP ${res.status}`
+    try {
+      const errJson = JSON.parse(text)
+      const firstError = errJson.errors
+        ? Object.values(errJson.errors as Record<string, string[]>).flat()[0]
+        : errJson.message
+      if (firstError) apiMsg = firstError
+    } catch {}
+    throw new Error(`Melhor Envio: ${apiMsg}`)
+  }
+
+  const data = JSON.parse(text)
+  // Log items with errors for debugging
+  const errItems = data.filter((i: any) => i.error)
+  if (errItems.length) console.log('[shipping] items with error:', JSON.stringify(errItems.map((i: any) => ({ id: i.id, name: i.name, error: i.error }))))
+
+  const result = data
+    .filter((item: any) => !item.error && Number(item.price) > 0)
+    .map((item: any) => ({ id: Number(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
+  console.log('[shipping] parsed services:', JSON.stringify(result))
+
+  if (result.length === 0 && data.length > 0) {
+    // All services filtered out — show why
+    const reasons = data.map((i: any) => `${i.name}: ${i.error || 'preço zero'}`).join('; ')
+    throw new Error(`Nenhum serviço disponível: ${reasons}`)
+  }
+
+  return result
 }
 
 // ─── Label Purchase ───

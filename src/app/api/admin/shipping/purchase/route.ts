@@ -17,8 +17,13 @@ export async function GET(request: NextRequest) {
     if (addr) fromCep = addr.cep
   }
 
-  const services = await getRealShippingOptions(cep, fromCep)
-  return NextResponse.json(services)
+  try {
+    const services = await getRealShippingOptions(cep, fromCep)
+    return NextResponse.json(services)
+  } catch (err: any) {
+    console.error('[purchase GET] services error:', err.message)
+    return NextResponse.json({ error: err.message }, { status: 422 })
+  }
 }
 
 export async function POST(request: NextRequest) {
