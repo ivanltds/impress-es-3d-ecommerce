@@ -59,7 +59,7 @@ export default function ProducaoPage() {
         setSelectedService(0)
         const orderCep = (item as any).cep || ''
         setShippingCep(orderCep)
-        if (orderCep) fetchServices(orderCep)
+        if (orderCep && orderCep.length >= 5) fetchServices(orderCep)
       }
       return
     }
@@ -155,7 +155,7 @@ export default function ProducaoPage() {
                 <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1">CEP de Entrega</label>
                 <div className="flex gap-2">
                   <input value={shippingCep} onChange={(e) => setShippingCep(e.target.value)} placeholder="01001000" className="flex-1 rounded-lg border px-3 py-2 text-sm" />
-                  <button type="button" onClick={() => fetchServices(shippingCep)} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Calcular</button>
+                  <button type="button" onClick={() => { if (shippingCep && shippingCep.length >= 5) fetchServices(shippingCep) }} className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Calcular</button>
                 </div>
               </div>
               {shippingServices.length > 0 && (
