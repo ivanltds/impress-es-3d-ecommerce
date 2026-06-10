@@ -111,6 +111,32 @@ export async function calculateShipping(cep: string): Promise<ShippingOption[]> 
   return fetchMelhorEnvio(cep)
 }
 
+// For purchase flow — only returns real API data, no fallback
+export async function getRealShippingOptions(cep: string): Promise<ShippingOption[]> {
+  const token = process.env.MELHOR_ENVIO_TOKEN
+  if (!token) return []
+
+  try {
+    const res = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/calculate`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        from: { postal_code: FROM_CEP },
+        to: { postal_code: cep.replace(/\D/g, '') },
+        products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
+        options: { receipt: false, own_hand: false },
+      }),
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data
+      .filter((item: any) => !item.error && item.price > 0)
+      .map((item: any) => ({ id: String(item.id), name: item.name, price: Number(item.price), days: item.delivery_time || 7 }))
+  } catch {
+    return []
+  }
+}
+
 // ─── Label Purchase ───
 export async function purchaseLabel(
   cep: string,

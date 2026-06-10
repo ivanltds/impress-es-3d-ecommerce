@@ -2,14 +2,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { calculateShipping, purchaseLabel } from '@/lib/shipping'
+import { getRealShippingOptions, purchaseLabel } from '@/lib/shipping'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const cep = request.nextUrl.searchParams.get('cep')
   if (!cep) return NextResponse.json({ error: 'CEP required' }, { status: 400 })
-  const services = await calculateShipping(cep)
+  const services = await getRealShippingOptions(cep)
   return NextResponse.json(services)
 }
 
