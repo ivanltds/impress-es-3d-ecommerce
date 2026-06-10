@@ -6,20 +6,31 @@ import { prisma } from '@/lib/db'
 export async function GET() {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const addresses = await prisma.storeAddress.findMany({ orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(addresses)
+  try {
+    const addresses = await prisma.storeAddress.findMany({ orderBy: { createdAt: 'desc' } })
+    return NextResponse.json(addresses)
+  } catch (err: any) {
+    console.error('[store-addresses] GET error:', err)
+    return NextResponse.json({ error: err.message || 'Erro ao buscar endereços' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { name, street, number, complement, neighborhood, city, state, cep, isActive } = await request.json()
-  if (!name || !street || !number || !city || !state || !cep) {
-    return NextResponse.json({ error: 'Campos obrigatórios: name, street, number, city, state, cep' }, { status: 400 })
+  try {
+    const body = await request.json()
+    const { name, street, number, complement, neighborhood, city, state, cep, isActive } = body
+    if (!name || !street || !number || !city || !state || !cep) {
+      return NextResponse.json({ error: 'Campos obrigatórios: name, street, number, city, state, cep' }, { status: 400 })
+    }
+    const formatted = cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
+    const address = await prisma.storeAddress.create({
+      data: { name, street, number, complement: complement || null, neighborhood: neighborhood || null, city, state, cep: formatted, isActive: isActive ?? true },
+    })
+    return NextResponse.json(address)
+  } catch (err: any) {
+    console.error('[store-addresses] POST error:', err)
+    return NextResponse.json({ error: err.message || 'Erro ao criar endereço' }, { status: 500 })
   }
-  const formatted = cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '-')
-  const address = await prisma.storeAddress.create({
-    data: { name, street, number, complement: complement || null, neighborhood: neighborhood || null, city, state, cep: formatted, isActive: isActive ?? true },
-  })
-  return NextResponse.json(address)
 }
