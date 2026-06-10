@@ -148,8 +148,9 @@ export async function purchaseLabel(cep: string, serviceId: string): Promise<{ t
     const checkout = await checkoutRes.json()
 
     // Step 3: Generate label
+    console.log('[shipping] Checkout response:', JSON.stringify(checkout).slice(0, 500))
     const orderId = checkout?.purchase?.orders?.[0]?.id || checkout?.orders?.[0]?.id
-    if (!orderId) { console.error('[shipping] No order ID in checkout response'); return null }
+    if (!orderId) { console.error('[shipping] No order ID in checkout. Full response:', JSON.stringify(checkout)); return null }
 
     const genRes = await fetch(`${MELHOR_ENVIO_URL}/me/shipment/generate`, {
       method: 'POST',

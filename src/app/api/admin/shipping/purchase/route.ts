@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
 
   // Purchase the label via Melhor Envio
   const label = await purchaseLabel(cep, serviceId)
-  if (!label) return NextResponse.json({ success: false, error: 'Falha ao comprar etiqueta' }, { status: 500 })
+  if (!label) {
+    console.error('[purchase] Label purchase returned null')
+    return NextResponse.json({ success: false, error: 'Falha ao comprar etiqueta. Verifique os logs do servidor.' }, { status: 500 })
+  }
+  console.log('[purchase] Label purchased:', JSON.stringify(label))
 
   // Update order with tracking
   await prisma.order.update({
