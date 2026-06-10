@@ -20,12 +20,8 @@ export async function GET() {
     },
   })
 
-  const items = orders.flatMap((o) => {
-    // Extract CEP from order notes
-    let cep = ''
-    try { if (o.notes) { const addr = JSON.parse(o.notes); cep = addr.cep || '' } } catch {}
-
-    return o.items.map((item) => ({
+  const items = orders.flatMap((o) =>
+    o.items.map((item) => ({
       id: item.id,
       orderId: o.id,
       orderNumber: o.orderNumber,
@@ -38,9 +34,9 @@ export async function GET() {
       productionNotes: item.productionNotes,
       total: o.total,
       estimatedHours: 2,
-      cep,
+      cep: o.cep || '',
     }))
-  })
+  )
 
   return NextResponse.json(items)
 }

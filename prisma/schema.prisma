@@ -201,6 +201,7 @@ model Order {
   sourceChannel    String?
   notes            String?
   themeSnapshot    String?
+  cep              String?  // CEP for shipping label generation
   user             User?     @relation(fields: [userId], references: [id])
   items            OrderItem[]
   createdAt        DateTime  @default(now())
