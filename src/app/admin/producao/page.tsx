@@ -91,14 +91,13 @@ export default function ProducaoPage() {
     if (!shippingForm) return
     setPurchasing(true)
     const itemId = shippingForm.id
-    if (selectedService > 0 && shippingCep) {
-      const res = await fetch('/api/admin/shipping/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: shippingForm.orderId, cep: shippingCep, serviceId: selectedService }) })
-      const data = await res.json()
-      if (data.success && data.label) {
-        setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i)))
-        setShippingForm(null); setPurchasing(false); return
-      }
-    }
+    // Register tracking on the order
+    await fetch('/api/admin/shipping/purchase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: shippingForm.orderId, trackingCode, carrier }),
+    })
+    // Move item to shipped in production
     setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, productionStatus: 'shipped' } : i)))
     await fetch('/api/admin/production', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemId, status: 'shipped', notes: `${carrier}: ${trackingCode}` }) })
     setShippingForm(null); setPurchasing(false)
@@ -193,7 +192,7 @@ export default function ProducaoPage() {
                 </div>
               </div>
               <div className="flex gap-2 pt-3">
-                <button onClick={confirmShipping} disabled={purchasing} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{purchasing ? 'Comprando...' : selectedService > 0 ? 'Comprar Etiqueta' : 'Confirmar Envio'}</button>
+                <button onClick={confirmShipping} disabled={purchasing} className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{purchasing ? 'Registrando...' : 'Confirmar Envio'}</button>
                 <button onClick={() => setShippingForm(null)} className="rounded-lg border px-4 py-2.5 text-sm">Cancelar</button>
               </div>
             </div>
