@@ -51,7 +51,7 @@ async function main() {
         estimatedProductionTime: 2,
         material: 'PLA Premium',
         isFeatured: true,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -69,7 +69,7 @@ async function main() {
         estimatedProductionTime: 1,
         material: 'PLA Standard',
         isFeatured: true,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -87,7 +87,7 @@ async function main() {
         estimatedProductionTime: 4,
         material: 'PLA Branco Premium',
         isFeatured: true,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -105,7 +105,7 @@ async function main() {
         estimatedProductionTime: 3,
         material: 'PLA Matte',
         isFeatured: true,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -123,7 +123,7 @@ async function main() {
         estimatedProductionTime: 3,
         material: 'PLA Premium',
         isFeatured: false,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -141,7 +141,7 @@ async function main() {
         estimatedProductionTime: 6,
         material: 'Resina UV',
         isFeatured: true,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -159,7 +159,7 @@ async function main() {
         estimatedProductionTime: 2,
         material: 'PLA Premium',
         isFeatured: false,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
     prisma.product.create({
@@ -177,7 +177,7 @@ async function main() {
         estimatedProductionTime: 2,
         material: 'PLA Premium',
         isFeatured: false,
-        images: ['/placeholder-product.jpg'],
+        images: [],
       },
     }),
   ])

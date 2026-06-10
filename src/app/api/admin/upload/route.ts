@@ -49,13 +49,20 @@ export async function POST(request: NextRequest) {
     // Generate safe filename
     const ext = path.extname(file.name).toLowerCase() || '.jpg'
     const safeName = `${crypto.randomBytes(16).toString('hex')}${ext}`
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    // Use /tmp in production (Vercel), public/ in development
+    const isProd = process.env.NODE_ENV === 'production'
+    const uploadDir = isProd
+      ? '/tmp/uploads'
+      : path.join(process.cwd(), 'public', 'uploads')
 
     // Ensure upload directory exists
     await mkdir(uploadDir, { recursive: true })
     await writeFile(path.join(uploadDir, safeName), bytes)
 
-    const url = `/uploads/${safeName}`
+    // Return API route URL for serving the file
+    const url = isProd
+      ? `/api/uploads/${safeName}`
+      : `/uploads/${safeName}`
     return NextResponse.json({ url, name: file.name, size: file.size })
   } catch (err) {
     console.error('[upload] Error:', err)
