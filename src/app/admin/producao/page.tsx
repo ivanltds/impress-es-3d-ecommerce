@@ -1,84 +1,70 @@
 'use client'
 
-// ─── M04: Production Kanban Board ───
+// ─── M04: Production Kanban Board (real data from DB) ───
 import { useState, useEffect, useCallback } from 'react'
-import { X, Clock, User, MapPin, Calendar } from 'lucide-react'
+import { X, Clock, User, MapPin, Package } from 'lucide-react'
 
-type Status = 'aguardando' | 'em-producao' | 'acabamento' | 'embalado' | 'enviado'
+type Status = 'pending' | 'in_progress' | 'finishing' | 'packed' | 'shipped'
 
-interface OrderItem {
+interface KanbanItem {
   id: string
+  orderId: string
+  orderNumber: string
+  customerName: string
+  customerPhone?: string
   productNameSnapshot: string
   qty: number
   customizationSnapshot?: string
   productionStatus: string
   productionNotes?: string
-}
-
-interface KanbanItem {
-  id: string
-  orderNumber: string
-  customerName: string
-  customerPhone?: string
-  items: OrderItem[]
-  status: Status
-  address?: string
   total: number
   estimatedHours: number
-  timeInColumn: string
-  history: { from: string; to: string; at: string }[]
+  address?: string
 }
 
 const COLUMNS: { key: Status; label: string; color: string }[] = [
-  { key: 'aguardando', label: 'Aguardando', color: 'bg-amber-50 border-amber-200' },
-  { key: 'em-producao', label: 'Em Produção', color: 'bg-blue-50 border-blue-200' },
-  { key: 'acabamento', label: 'Acabamento', color: 'bg-purple-50 border-purple-200' },
-  { key: 'embalado', label: 'Embalado', color: 'bg-green-50 border-green-200' },
-  { key: 'enviado', label: 'Enviado', color: 'bg-gray-50 border-gray-200' },
+  { key: 'pending', label: 'Aguardando', color: 'bg-amber-50 border-amber-200' },
+  { key: 'in_progress', label: 'Em Produção', color: 'bg-blue-50 border-blue-200' },
+  { key: 'finishing', label: 'Acabamento', color: 'bg-purple-50 border-purple-200' },
+  { key: 'packed', label: 'Embalado', color: 'bg-green-50 border-green-200' },
+  { key: 'shipped', label: 'Enviado', color: 'bg-gray-50 border-gray-200' },
 ]
+
+const STATUS_MAP: Record<string, Status> = {
+  pending: 'pending',
+  in_progress: 'in_progress',
+  finishing: 'finishing',
+  packed: 'packed',
+  shipped: 'shipped',
+}
 
 export default function ProducaoPage() {
   const [items, setItems] = useState<KanbanItem[]>([])
   const [selected, setSelected] = useState<KanbanItem | null>(null)
   const [dragOver, setDragOver] = useState<Status | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load from localStorage for demo
-    const stored = localStorage.getItem('kanban-items')
-    if (stored) {
-      setItems(JSON.parse(stored))
-    } else {
-      // Seed demo data
-      const demo: KanbanItem[] = [
-        { id: '1', orderNumber: '3DP-00123', customerName: 'João Silva', customerPhone: '(11) 99999-0001', items: [{ id: 'i1', productNameSnapshot: 'Porta-lata Neon Gamer', qty: 1, customizationSnapshot: '{"Cor":"Verde Neon","Texto":"JV"}', productionStatus: 'aguardando' }], status: 'aguardando', address: 'Rua A, 123 - Osasco/SP', total: 49.9, estimatedHours: 2, timeInColumn: '2h', history: [{ from: 'pago', to: 'aguardando', at: '2026-06-10T10:00' }] },
-        { id: '2', orderNumber: '3DP-00124', customerName: 'Maria Souza', customerPhone: '(11) 98888-0002', items: [{ id: 'i2', productNameSnapshot: 'Chaveiro Personalizado', qty: 3, customizationSnapshot: '{"Nome":"Maria"}', productionStatus: 'em-producao' }], status: 'em-producao', address: 'Rua B, 456 - São Paulo/SP', total: 59.7, estimatedHours: 3, timeInColumn: '1h', history: [{ from: 'aguardando', to: 'em-producao', at: '2026-06-10T11:00' }] },
-        { id: '3', orderNumber: '3DP-00125', customerName: 'Pedro Costa', items: [{ id: 'i3', productNameSnapshot: 'Abajur Lithophane', qty: 1, customizationSnapshot: '', productionStatus: 'acabamento' }], status: 'acabamento', address: 'Rua C, 789 - Campinas/SP', total: 89.9, estimatedHours: 4, timeInColumn: '30min', history: [{ from: 'em-producao', to: 'acabamento', at: '2026-06-10T12:00' }] },
-      ]
-      setItems(demo)
-      localStorage.setItem('kanban-items', JSON.stringify(demo))
-    }
+    fetch('/api/admin/production')
+      .then((r) => r.json())
+      .then((data) => { setItems(data); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
-  const moveItem = useCallback((itemId: string, toStatus: Status) => {
-    setItems((prev) => {
-      const updated = prev.map((i) => {
-        if (i.id !== itemId) return i
-        return {
-          ...i,
-          status: toStatus,
-          timeInColumn: 'agora',
-          history: [...i.history, { from: i.status, to: toStatus, at: new Date().toISOString() }],
-        }
-      })
-      localStorage.setItem('kanban-items', JSON.stringify(updated))
-      return updated
+  const moveItem = useCallback(async (itemId: string, toStatus: Status) => {
+    setItems((prev) =>
+      prev.map((i) => (i.id === itemId ? { ...i, productionStatus: toStatus } : i))
+    )
+    await fetch('/api/admin/production', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, status: toStatus }),
     })
   }, [])
 
   function handleDragStart(e: React.DragEvent, itemId: string) {
     e.dataTransfer.setData('text/plain', itemId)
     e.dataTransfer.effectAllowed = 'move'
-    // Prevent the card from becoming transparent while dragging
     const el = e.currentTarget as HTMLElement
     el.style.opacity = '0.6'
     el.addEventListener('dragend', () => { el.style.opacity = '1' }, { once: true })
@@ -91,17 +77,20 @@ export default function ProducaoPage() {
     if (itemId) moveItem(itemId, status)
   }
 
+  const itemCount = items.length
+
+  if (loading) return <div className="p-6">Carregando produção...</div>
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-bold">Produção</h1>
-        <span className="text-sm text-muted-foreground">{items.length} ite{items.length !== 1 ? 'ns' : 'm'} na fila</span>
+        <span className="text-sm text-muted-foreground">{itemCount} ite{itemCount !== 1 ? 'ns' : 'm'} na fila</span>
       </div>
 
-      {/* Kanban Board */}
       <div className="mt-6 grid grid-cols-5 gap-4 overflow-x-auto" data-testid="kanban-board">
         {COLUMNS.map((col) => {
-          const colItems = items.filter((i) => i.status === col.key)
+          const colItems = items.filter((i) => i.productionStatus === col.key || (col.key === 'pending' && !i.productionStatus))
           return (
             <div
               key={col.key}
@@ -124,11 +113,18 @@ export default function ProducaoPage() {
                   className="mb-2 cursor-pointer rounded-lg border bg-card p-3 text-sm shadow-sm transition-all hover:shadow-md"
                   data-testid="kanban-card"
                 >
-                  <p className="font-semibold">{item.orderNumber}</p>
-                  <p className="text-xs text-muted-foreground">{item.items[0]?.productNameSnapshot}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10">
+                      <Package className="h-4 w-4 text-primary/50" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{item.orderNumber}</p>
+                      <p className="truncate text-xs text-muted-foreground">{item.productNameSnapshot} x{item.qty}</p>
+                    </div>
+                  </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.estimatedHours}h</span>
-                    <span>{item.timeInColumn}</span>
+                    <span className="flex items-center gap-1"><User className="h-3 w-3" /> {item.customerName}</span>
                   </div>
                 </div>
               ))}
@@ -137,7 +133,6 @@ export default function ProducaoPage() {
         })}
       </div>
 
-      {/* Expanded Card Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelected(null)}>
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="kanban-card-detail">
@@ -145,51 +140,25 @@ export default function ProducaoPage() {
               <h2 className="font-heading text-xl font-bold">{selected.orderNumber}</h2>
               <button onClick={() => setSelected(null)} className="rounded-lg p-2 hover:bg-muted"><X className="h-5 w-5" /></button>
             </div>
-
             <div className="mt-4 space-y-4">
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">{selected.customerName}</span>
                 {selected.customerPhone && <span className="text-muted-foreground">{selected.customerPhone}</span>}
               </div>
-
               <div className="rounded-lg border p-4">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Itens</p>
-                {selected.items.map((item) => (
-                  <div key={item.id} className="mt-2 flex justify-between text-sm">
-                    <span>{item.productNameSnapshot} x{item.qty}</span>
-                    {item.customizationSnapshot && <span className="text-xs text-muted-foreground">{JSON.parse(item.customizationSnapshot).Cor || JSON.parse(item.customizationSnapshot).Nome || ''}</span>}
-                  </div>
-                ))}
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Item</p>
+                <p className="mt-1 font-medium">{selected.productNameSnapshot}</p>
+                <p className="text-sm text-muted-foreground">Qty: {selected.qty}</p>
+                {selected.customizationSnapshot && (
+                  <p className="mt-1 text-xs text-primary">
+                    {(() => { try { return JSON.stringify(JSON.parse(selected.customizationSnapshot)) } catch { return selected.customizationSnapshot } })()}
+                  </p>
+                )}
               </div>
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>{selected.address || '—'}</span>
-              </div>
-
               <div className="flex justify-between text-sm">
-                <span>Total: <strong>R$ {selected.total.toFixed(2)}</strong></span>
-                <span>Prazo: ~{selected.estimatedHours}h</span>
-              </div>
-
-              {/* Timeline */}
-              <div className="border-t pt-4" data-testid="status-timeline">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Histórico</p>
-                <div className="mt-3 space-y-3">
-                  {selected.history.map((h, idx) => (
-                    <div key={idx} className="flex gap-3 text-sm">
-                      <div className="flex flex-col items-center">
-                        <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-                        {idx < selected.history.length - 1 && <div className="w-0.5 flex-1 bg-muted" />}
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{new Date(h.at).toLocaleString('pt-BR')}</p>
-                        <p>{h.from} → <span className="font-medium">{h.to}</span></p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <span>Pedido total: <strong>R$ {selected.total.toFixed(2)}</strong></span>
+                <span>Prazo est: ~{selected.estimatedHours}h</span>
               </div>
             </div>
           </div>
