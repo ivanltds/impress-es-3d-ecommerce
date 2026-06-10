@@ -52,20 +52,27 @@ export async function PATCH(request: NextRequest) {
     data: { productionStatus: status, productionNotes: notes },
   })
 
-  // If item reaches "shipped", update order fulfillment status
-  if (status === 'shipped') {
-    const item = await prisma.orderItem.findUnique({ where: { id: itemId }, select: { orderId: true } })
-    if (item) {
-      // Check if ALL items in this order are shipped
-      const orderItems = await prisma.orderItem.findMany({ where: { orderId: item.orderId } })
-      const allShipped = orderItems.every((i) => i.id === itemId || i.productionStatus === 'shipped')
-      if (allShipped) {
-        await prisma.order.update({
-          where: { id: item.orderId },
-          data: { fulfillmentStatus: 'shipped' },
-        })
-      }
+  // Sync order fulfillment status with production progress
+  const item = await prisma.orderItem.findUnique({ where: { id: itemId }, select: { orderId: true } })
+  if (item) {
+    const orderItems = await prisma.orderItem.findMany({ where: { orderId: item.orderId } })
+    const allShipped = orderItems.every((i) => i.productionStatus === 'shipped' || i.id === itemId)
+
+    // Map production status to order fulfillment status
+    const statusMap: Record<string, string> = {
+      pending: 'unfulfilled',
+      in_progress: 'in_progress',
+      finishing: 'in_progress',
+      packed: 'in_progress',
+      shipped: allShipped ? 'shipped' : 'in_progress',
     }
+
+    const fulfillmentStatus = statusMap[status] || 'unfulfilled'
+
+    await prisma.order.update({
+      where: { id: item.orderId },
+      data: { fulfillmentStatus },
+    })
   }
 
   return NextResponse.json({ success: true })
