@@ -1,6 +1,6 @@
 # Session Latest — 3DPrint Store
 
-## Data: 2026-06-11
+## Data: 2026-06-11 (atualizado)
 
 ## Milestone Ativo: M04 (Fulfillment)
 ## Fase: Implementação concluída (aguardando deploy + teste)
@@ -31,6 +31,35 @@ Arquivos modificados (Melhor Envio + schema + UI):
 - Tooltip hover/click: 4 passos de instrução + link direto melhorenvio.com.br/envios
 - Badge aparece nas cards da coluna "Enviado p/ Entrega" e no modal de detalhe
 - Após `confirmShipping` bem-sucedido, estado local atualizado com `trackingCode: data.tracking`
+
+### Feature: Sistema de personalização completo ✅
+Arquivos criados/modificados:
+- `src/lib/customization.ts` — tipos, FILE_LIMITS, calcCustomizationTotal
+- `src/app/api/uploads/customization/route.ts` — upload de arquivos (413 p/ arquivos grandes)
+- `src/components/admin/customization-builder.tsx` — builder visual p/ admin
+- `src/components/shop/customization-modal.tsx` — modal do cliente + CustomizationSuggestion
+- `src/components/shop/product-info.tsx` — CTAs dinâmicos, handleBuyNow, handleModalConfirm
+- `src/app/admin/produtos/novo/page.tsx` — toggle + CustomizationBuilder
+- `src/app/admin/produtos/[id]/page.tsx` — carrega/salva schema
+- `src/app/api/admin/products/create/route.ts` — salva customizationSchema
+- `src/app/api/admin/products/[id]/route.ts` — PATCH customizationSchema
+- `src/app/carrinho/page.tsx` — CustomizationSummary colapsável, breakdown de preço
+- `src/app/admin/producao/page.tsx` — CustomizationDetail no modal de detalhe do kanban
+- `prisma/schema.prisma` — `customizationSchema Json?`, `customizationPrice Float @default(0)`
+
+### Users/DB management ✅
+- `kaiquebezerramqs@gmail.com` → admin
+- `igorltdz@gmail.com` criado como admin (senha: 12345678)
+- Todos os pedidos e leads deletados
+
+### Auth redirects + Header ✅
+- Admin login → `/admin`, cliente → `/produtos`
+- Header: "Olá, {nome}" + dropdown por role (admin vs cliente)
+- `src/components/shared/providers.tsx` — SessionProvider wrapper
+- `src/app/layout.tsx` — usa Providers
+
+### Product gallery fix ✅
+- `src/components/shop/product-gallery.tsx` — reescrito para usar images[] real
 
 ---
 

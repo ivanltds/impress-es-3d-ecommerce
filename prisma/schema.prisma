@@ -124,6 +124,7 @@ model Product {
   seoTitle               String?
   seoDescription         String?
   legalNotes             String?
+  customizationSchema    Json?     // array de CustomizationField — define o formulário de personalização
   category               Category? @relation(fields: [categoryId], references: [id])
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
@@ -222,7 +223,8 @@ model OrderItem {
   skuSnapshot            String
   qty                    Int
   unitPrice              Float
-  customizationSnapshot  String?  // JSON
+  customizationSnapshot  String?  // JSON — valores preenchidos pelo cliente (congelados)
+  customizationPrice     Float    @default(0) // acréscimos de personalização
   productionStatus       String   @default("pending")
   productionNotes        String?
   order                  Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)

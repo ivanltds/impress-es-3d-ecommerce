@@ -1,7 +1,62 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { X, Clock, User, Package, MapPin, Truck, Info, ExternalLink } from 'lucide-react'
+import { X, Clock, User, Package, MapPin, Truck, Info, ExternalLink, Download, Image as ImageIcon, FileText } from 'lucide-react'
+import type { CustomizationValue } from '@/lib/customization'
+
+function formatBRL(v: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+}
+
+function CustomizationDetail({ raw }: { raw: string }) {
+  let values: CustomizationValue[] = []
+  try { values = JSON.parse(raw) } catch { return <p className="text-xs text-muted-foreground italic">Personalização (formato inválido)</p> }
+  if (!values.length) return null
+
+  const total = values.reduce((s, v) => s + (v.priceAdd || 0), 0)
+
+  return (
+    <div className="mt-3 rounded-xl border bg-muted/20">
+      <div className="flex items-center justify-between border-b px-3 py-2">
+        <span className="text-xs font-semibold uppercase text-muted-foreground">Personalização</span>
+        {total > 0 && <span className="text-xs font-semibold text-primary">+{formatBRL(total)}</span>}
+      </div>
+      <div className="divide-y px-3">
+        {values.map((v) => (
+          <div key={v.fieldId} className="flex items-start gap-2 py-2">
+            {(v.fieldType === 'image_ref') && <ImageIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+            {(v.fieldType === 'file_3d') && <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+            {(v.fieldType !== 'image_ref' && v.fieldType !== 'file_3d') && <span className="mt-0.5 h-3.5 w-3.5 shrink-0" />}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-muted-foreground">{v.label}</p>
+              {(v.fieldType === 'image_ref' || v.fieldType === 'file_3d') && v.fileUrl ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  {v.fieldType === 'image_ref' && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.fileUrl} alt={v.displayValue} className="h-16 w-16 rounded-lg border object-cover" />
+                  )}
+                  <a
+                    href={v.fileUrl}
+                    download={v.displayValue}
+                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1 text-xs font-medium hover:bg-muted/80"
+                  >
+                    <Download className="h-3 w-3" />
+                    {v.displayValue}
+                  </a>
+                </div>
+              ) : (
+                <p className="mt-0.5 text-sm text-foreground break-words">{v.displayValue}</p>
+              )}
+            </div>
+            {v.priceAdd > 0 && (
+              <span className="ml-2 shrink-0 text-xs font-semibold text-primary">+{formatBRL(v.priceAdd)}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 type Status = 'pending' | 'in_progress' | 'finishing' | 'packed' | 'shipped'
 
@@ -300,7 +355,7 @@ export default function ProducaoPage() {
                 <p className="text-xs font-semibold uppercase text-muted-foreground">Item</p>
                 <p className="mt-1 font-medium">{selected.productNameSnapshot}</p>
                 <p className="text-sm text-muted-foreground">Qty: {selected.qty}</p>
-                {selected.customizationSnapshot && <p className="mt-1 text-xs text-primary">{(() => { try { return JSON.stringify(JSON.parse(selected.customizationSnapshot)) } catch { return selected.customizationSnapshot } })()}</p>}
+                {selected.customizationSnapshot && <CustomizationDetail raw={selected.customizationSnapshot} />}
               </div>
               <div className="flex justify-between text-sm">
                 <span>Pedido total: <strong>R$ {selected.total.toFixed(2)}</strong></span>

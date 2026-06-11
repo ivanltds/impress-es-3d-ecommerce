@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name, slug, shortDescription, longDescription, basePrice, categoryId, collectionId, material, customizationLevel, estimatedHours, images } = body
+  const { name, slug, shortDescription, longDescription, basePrice, categoryId, collectionId, material, customizationLevel, estimatedHours, images, customizationSchema } = body
 
   if (!name || !slug || !shortDescription || !basePrice) {
     return NextResponse.json({ error: 'Campos obrigatórios: nome, slug, descrição curta, preço' }, { status: 400 })
@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
       collectionId: collectionId || null,
       material: material || 'PLA Premium',
       customizationLevel: customizationLevel || 'simple',
-      isCustomizable: customizationLevel !== 'none',
+      isCustomizable: customizationLevel !== 'none' || (customizationSchema && customizationSchema.length > 0),
       estimatedProductionTime: estimatedHours || 2,
       images: images || [],
       productType: 'simple',
+      customizationSchema: customizationSchema || null,
     },
   })
 

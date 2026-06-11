@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id } = await params
   const body = await req.json()
-  const { name, slug, shortDescription, longDescription, basePrice, categoryId, collectionId, material, customizationLevel, estimatedHours, images } = body
+  const { name, slug, shortDescription, longDescription, basePrice, categoryId, collectionId, material, customizationLevel, estimatedHours, images, customizationSchema } = body
 
   const product = await prisma.product.update({
     where: { id },
@@ -29,9 +29,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       collectionId: collectionId || null,
       material: material || '',
       customizationLevel: customizationLevel || 'simple',
-      isCustomizable: customizationLevel !== 'none',
+      isCustomizable: customizationLevel !== 'none' || (customizationSchema && customizationSchema.length > 0),
       estimatedProductionTime: estimatedHours || 2,
       images: images || [],
+      // customizationSchema: null remove o formulário; array atualiza — pedidos existentes ficam congelados
+      customizationSchema: customizationSchema || null,
     },
   })
 
