@@ -2,7 +2,7 @@
 // Atende aos cenários: 5.1-5.8 (tema), 6.1-6.7 (layout), 6.7 (SEO)
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
-import { ThemeProvider } from '@/components/shared/theme-provider'
+import { Providers } from '@/components/shared/providers'
 import { Header } from '@/components/shared/header'
 import { Footer } from '@/components/shared/footer'
 import { MetaPixel } from '@/components/shared/meta-pixel'
@@ -47,11 +47,11 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-background font-body text-foreground antialiased flex flex-col">
         <MetaPixel />
-        <ThemeProvider>
+        <Providers>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )

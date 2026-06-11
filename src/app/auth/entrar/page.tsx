@@ -2,8 +2,9 @@
 
 // ─── F4: Login Page ───
 // Atende aos cenários: 4.2 (login), 4.3 (credenciais inválidas)
+// Redirect: admin → /admin | customer → /produtos
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -25,14 +26,18 @@ export default function LoginPage() {
       redirect: false,
     })
 
-    setLoading(false)
-
     if (result?.error) {
       setError('E-mail ou senha inválidos')
-    } else {
-      router.push('/')
-      router.refresh()
+      setLoading(false)
+      return
     }
+
+    // Busca sessão para saber o role
+    const session = await getSession()
+    const role = (session?.user as { role?: string })?.role
+
+    router.push(role === 'admin' ? '/admin' : '/produtos')
+    router.refresh()
   }
 
   return (
@@ -41,11 +46,7 @@ export default function LoginPage() {
         <h1 className="text-center font-heading text-2xl font-bold">Entrar</h1>
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium"
-              data-testid="email-label"
-            >
+            <label htmlFor="email" className="block text-sm font-medium" data-testid="email-label">
               E-mail
             </label>
             <input
@@ -60,11 +61,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium"
-              data-testid="password-label"
-            >
+            <label htmlFor="password" className="block text-sm font-medium" data-testid="password-label">
               Senha
             </label>
             <input
