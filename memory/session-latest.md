@@ -2,103 +2,112 @@
 
 ## Data: 2026-06-11
 
-## Milestone Ativo: M04 (Admin + Operations + Analytics)
-## Fase: Implementação concluída — 🚧 G4 pendente (homologação PO)
-## Gate Pendente: G4 — Product Owner homologa deploy preview
+## Milestone Ativo: M05 (Multi-Theme Experience + LP Redesign)
+## Fase: 🟡 FASE 3 — Implementation (Dev codifica até testes GREEN)
+## Gate Pendente: G3 (automático — todos os testes passam + build verde)
 
 ---
 
-## Scorecard M04
+## ✅ M04 CONCLUÍDO — Scorecard Final
 
-| Feature | Cenários | Implementados |
-|---------|:---:|:---:|
-| F1: Admin CRUD Produtos | 4 | 4 ✅ |
-| F2: Gestão de Pedidos | 3 | 3 ✅ |
-| F3: Fila de Produção (Kanban) | 7 | 6 ✅ / 1 ❌ (3.7 falha) |
-| F4: Dashboard Analytics | 3 | 3 ✅ |
-| F5: Marketing Analytics | 4 | 1 ✅ / 3 ❌ (Pixel, UTM) |
-| **Total spec** | **21** | **17 ✅ / 4 ❌** |
-
-Fura-filas executados: FF02, FF03, FF04, FF05, FF06, FF07 (todos ✅)
-Débitos: TD01 (saldo Melhor Envio)
+| Gate | Status | Data |
+|------|--------|------|
+| G0 Spec Approved | ✅ | anterior |
+| G1 Architecture Approved | ✅ | anterior |
+| G2 Tests Authored (RED) | ✅ | 2026-06-11 |
+| G3 All Tests Pass (GREEN) | ✅ | 2026-06-11 |
+| G4 Verification Passed | ✅ | 2026-06-11 |
+| G5 Deploy Approved (PO) | ✅ | anterior |
+| G6 Process Improved | ✅ | 2026-06-11 |
 
 ---
 
-## Funcionalidades implementadas (completo)
+## ✅ M05 — Gates até agora
 
-### M04 core
-- Admin CRUD produtos (criar, editar, listar, arquivar)
-- Gestão de pedidos com filtro abertos/concluídos
-- Kanban produção 5 colunas com drag-and-drop
-- Dashboard analytics (métricas, gráfico, top produtos)
-- Lead capture form + kanban de leads
+| Gate | Status | Data |
+|------|--------|------|
+| G0 Spec Approved | ✅ | 2026-06-11 |
+| G1 Architecture Approved | ✅ | 2026-06-11 |
+| G2 Tests Authored (RED) | ✅ | 2026-06-11 |
+| G3 All Tests Pass (GREEN) | 🚧 FECHADO | — |
+| G4 Verification Passed | 🚧 FECHADO | — |
+| G5 Deploy Approved | 🚧 FECHADO | — |
+| G6 Process Improved | 🚧 FECHADO | — |
 
-### FF02 — Fluxo integrado + Melhor Envio
-- Fluxo Lead → Pedido → Produção → Envio
-- API Melhor Envio: Cart → Checkout → Generate (3 etapas)
-- StoreAddress: endereços de origem cadastráveis
-- CPF no checkout, campos de endereço estruturados no Order
-- MELHOR_ENVIO_MOCK=true para dev sem saldo
+---
 
-### FF03 — Modal de envio
-- Modal abre ao arrastar para "Enviado p/ Entrega"
-- Seleção de endereço de origem + CEP + cotação + compra
-- Badge ShippingTooltip (azul=real, âmbar=MOCK) no kanban
+## M05 — Artefatos produzidos (FASE 0–2)
 
-### FF04 — Sistema de personalização
-- 7 tipos de campo (text, textarea, color_select, size_select, option_select, image_ref, file_3d)
-- Builder visual admin + Modal cliente
-- Upload de arquivos (8MB img / 20MB 3D) com fallback WhatsApp
-- Precificação adicional por campo/opção
-- Snapshot congelado no pedido
-- CustomizationDetail no modal do kanban
+| Artefato | Arquivo | Status |
+|----------|---------|--------|
+| Spec Gherkin | `specs/M05-multi-theme.spec.md` | ✅ 656 linhas, 53 cenários |
+| Arquitetura | `docs/architecture/M05-architecture.md` | ✅ 1.529 linhas |
+| Testes Vitest integração | `tests/integration/m05-universes.test.ts` | ✅ 6 testes RED |
+| Testes Vitest integração | `tests/integration/m05-user-preference.test.ts` | ✅ 13 testes RED |
+| Testes unitários lógica | `tests/unit/m05-universe-logic.test.ts` | ✅ 27 testes RED |
+| Testes E2E homepage | `e2e/specs/m05-homepage.spec.ts` | ✅ 25 testes RED |
+| Testes E2E universo | `e2e/specs/m05-universo-page.spec.ts` | ✅ 25 testes RED |
 
-### FF05 — Auth redirects + Header
-- Admin login → /admin, cliente → /produtos
-- Header: "Olá, {nome}", dropdown por role
-- SessionProvider + StoreSettingsProvider no layout
+**Total M05:** 96 testes escritos — todos 🔴 RED (código não existe ainda)
 
-### FF06 — Product gallery + Comprar Agora
-- Galeria de produto corrigida (imagens reais, lightbox, thumbnails)
-- Botão "Comprar Agora" → adiciona + navega para /carrinho
+---
 
-### FF07 — StoreSettings + WhatsApp
-- Model StoreSettings singleton no banco
-- /admin/configuracoes: campo WhatsApp + link de teste
-- useStoreSettings() hook para componentes
+## M05 — O que o Dev precisa implementar (FASE 3)
+
+### Schema Prisma:
+- `Universe` model + `ProductUniverse` (M:N) + índices
+- `Testimonial` model + índices
+- Seed: 5 universos (auto → comingSoon:true) + 3 depoimentos
+
+### Arquivo de configuração:
+- `src/config/universes.ts`
+
+### API Routes novas:
+- `GET /api/universes`
+- `PATCH /api/user/preference`
+
+### API Routes modificadas:
+- `PATCH /api/admin/products/[id]` — suporte a `universes[]`
+
+### Componentes novos (src/components/universe/):
+- UniverseThemeProvider + .module.css
+- UniversoCard, UniversosSection, HeroSection
+- ComoFuncionaSection, ProvaSocialSection, DestaquesSection
+- WhatsAppCTA, UniversoProdutosGrid, UniversePreferenceSetter
+
+### Páginas:
+- `src/app/universo/[slug]/page.tsx` + not-found + loading
+- `src/app/page.tsx` redesign completo
+
+### Assets:
+- `public/universes/{slug}/og.jpg|hero.jpg|card.jpg` (5 slugs)
+- `public/og-home.jpg`
+
+---
+
+## Backlog acumulado
+
+| # | Cenário | Origem |
+|---|---------|--------|
+| B01 | Registrar falha de produção (3.7) | M04 spec |
+| B02 | Meta Pixel — PageView (5.1) | M04 spec |
+| B03 | Meta Pixel — evento Purchase (5.2) | M04 spec |
+| B04 | Captura de UTM nos pedidos (5.3) | M04 spec |
+| TD01 | Recarregar saldo Melhor Envio (mín R$10) | operacional |
 
 ---
 
 ## Pendências operacionais
 
-| # | Pendência | Prioridade |
-|---|-----------|-----------|
-| TD01 | Recarregar saldo Melhor Envio (mín R$10) | 🔴 Antes do go-live |
-| — | `npx prisma db push && npx prisma generate` | 🔴 Imediato |
-| — | `MELHOR_ENVIO_MOCK=true` na Vercel | 🟡 Para staging |
-| — | `NEXT_PUBLIC_WHATSAPP_PHONE` pode ser removida (substituída pelo DB) | 🟢 Limpeza |
-| — | Commit + push de todas as mudanças | 🔴 Imediato |
-
 ```bash
-npx prisma db push
-npx prisma generate
-git add -A
-git commit -m "feat(M04): sistema completo — personalização, auth, settings, fura-filas documentados"
+# Commit M04 + M05 FASE 0-2 (executar manualmente)
+git add tests/ src/app/api/admin/products/ src/app/api/admin/shipping/purchase/route.ts .github/workflows/ci.yml docs/SDLC.md SOURCE_OF_TRUTH.md memory/ specs/ docs/architecture/
+git commit -m "feat(M05): G0+G1+G2 — spec Gherkin, arquitetura e testes RED"
 git push
 ```
 
 ---
 
-## Cenários pendentes da spec M04 (backlog)
-
-- 3.7: Registrar falha de produção
-- 5.1: Meta Pixel — PageView
-- 5.2: Meta Pixel — evento Purchase
-- 5.3: Captura de UTM nos pedidos
-
----
-
 ## Próximo passo
 
-**G4:** PO homologa deploy preview do M04 completo.
-Após G4 → G5 (retrospective) → M05 ou endereçar cenários pendentes.
+**FASE 3 — Implementation:** Dev implementa código até todos os 96 testes ficarem 🟢 GREEN.

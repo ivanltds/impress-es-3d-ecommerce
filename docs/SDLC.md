@@ -277,6 +277,31 @@ Fura-fila segue o MESMO ciclo TDD (FASE 0→6). Sem atalhos.
 
 ## CHANGELOG
 
+### v2.2.0 (2026-06-11) — M04 Retrospective
+
+**Melhorias identificadas e incorporadas:**
+
+**M1 — File Integrity Check (prevenção de truncamento)**
+Constatado em M04: arquivos editados via `Write` tool em mounts Windows→Linux podem sofrer truncamento silencioso (null bytes ou EOF prematuro). O processo agora exige:
+- Após todo `Write` em arquivo de rota, rodar `tail -5 <file> | cat -A` para detectar null bytes
+- Se `wc -l` Linux divergir da contagem do `Read` tool, reescrever via bash heredoc
+- CI (`npm run test`) captura ParseErrors de arquivos truncados — confirmar verde antes de G3
+
+**M2 — NextRequest em testes de rotas com searchParams**
+Rotas que usam `request.nextUrl.searchParams` (padrão Next.js) requerem `NextRequest` (não `Request`) nos testes de integração. Regra adicionada ao SDLC: ao escrever testes de rotas com query params, sempre usar `import { NextRequest } from 'next/server'`.
+
+**M3 — TDD em fura-filas: nível mínimo de teste**
+FF02-FF07 foram implementados sem testes prévios formais. A partir de M05: todo fura-fila deve ter pelo menos testes de integração escritos (e falhando) ANTES da implementação. Cenários Gherkin simplificados são aceitáveis; dispensa Playwright para fura-filas de escopo pequeno.
+
+**M4 — CI obrigatório no pipeline**
+A partir de M04, o CI (GitHub Actions) executa `npm run test` em todo PR/push. G3 só é liberado com o job `test` verde. Playwright E2E continua como job opcional (`continue-on-error: true`).
+
+**Cenários postergados de M04 → Backlog M05/M07:**
+- 3.7: Registrar falha de produção
+- 5.1: Meta Pixel — PageView
+- 5.2: Meta Pixel — evento Purchase
+- 5.3: Captura de UTM nos pedidos
+
 ### v2.1.0 (2026-06-09)
 - **TDD integrado:** Testes escritos ANTES do código (Test First)
 - FASE 2: Test Authoring (QA escreve testes, 🔴 RED)

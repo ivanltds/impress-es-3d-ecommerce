@@ -323,7 +323,7 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 | M01 | Foundation | 1 | A (Foundation) | ⬜ A FAZER |
 | M02 | Catalog + Experience | 1 | B + C (Produto) | ⬜ A FAZER |
 | M03 | Cart + Checkout + Customer | 1 | C + D | ⬜ A FAZER |
-| M04 | Admin + Operations + Analytics | 1 🎯 MVP | E + F | ⬜ A FAZER |
+| M04 | Admin + Operations + Analytics | 1 🎯 MVP | E + F | ✅ CONCLUÍDO (2026-06-11) |
 | M05 | Multi-Theme Experience | 2 | Diferenciação | ⬜ A FAZER |
 | M06 | Personalized Customer Area | 2 | Diferenciação | ⬜ A FAZER |
 | M07 | Growth Engine | 3 | Escala | ⬜ A FAZER |
@@ -360,6 +360,13 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 ---
 
 ## 10. CHANGELOG
+
+### v2.1.0 (2026-06-11)
+- M04 marcado como ✅ CONCLUÍDO
+- 4 cenários postergados para backlog (3.7, 5.1, 5.2, 5.3)
+- CI obrigatório adicionado ao pipeline (GitHub Actions)
+- 108 testes de integração + unitários — cobertura total das APIs
+- SDLC v2.2.0 com 4 melhorias de processo
 
 ### v2.0.0 (2026-06-09)
 - **PRD completo:** Visão estratégica, 12 módulos, modelo de dados (20+ entidades), fluxos, regras, analytics
