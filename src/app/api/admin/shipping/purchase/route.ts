@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       toState: toDetails.state,
     })
 
-    const result = await purchaseLabel(cep, serviceId, customer, toDetails, fromAddress)
+    const result = await purchaseLabel(cep, serviceId, customer, toDetails, fromAddress, order.total)
 
     if (!result.success) {
       console.error('[purchase POST] label failed:', result.error)

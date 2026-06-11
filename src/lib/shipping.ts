@@ -218,12 +218,14 @@ export interface ToAddressData {
 // fromAddress: endereço de origem da loja (do BD)
 // customer: dados do destinatário (nome, phone, email, document)
 // toDetails: endereço completo do destinatário
+// orderValue: valor total do pedido (usado como unitary_value para seguro)
 export async function purchaseLabel(
   cep: string,
   serviceId: string,
   customer: CustomerData,
   toDetails: ToAddressData,
-  fromAddress?: StoreAddressData
+  fromAddress?: StoreAddressData,
+  orderValue?: number
 ): Promise<LabelResult> {
   const token = process.env.MELHOR_ENVIO_TOKEN
   if (!token) {
@@ -274,7 +276,15 @@ export async function purchaseLabel(
       from,
       to,
       service: Number(serviceId),
-      products: [{ name: 'Produto 3D', quantity: 1, unitary_value: 50, weight: 0.3, width: 15, height: 10, length: 20 }],
+      // Dimensões padrão para peça impressa 3D em caixa de envio
+      // height/width/length em cm | weight em kg | unitary_value = valor real do pedido
+      volumes: [{
+        height: 15,
+        width: 20,
+        length: 25,
+        weight: 0.5,
+        unitary_value: orderValue && orderValue > 0 ? Math.ceil(orderValue) : 100,
+      }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },
     }
     console.log('[shipping] cart body:', JSON.stringify({ from: body.from, to: body.to, service: body.service }))
