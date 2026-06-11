@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
       isCustomizable: customizationLevel !== 'none' || (customizationSchema && customizationSchema.length > 0),
       estimatedProductionTime: estimatedHours || 2,
       images: images || [],
-      productType: 'simple',
+      productType: 'standard',
       customizationSchema: customizationSchema || null,
+      status: 'active',
     },
   })
 

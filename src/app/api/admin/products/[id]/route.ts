@@ -32,7 +32,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       isCustomizable: customizationLevel !== 'none' || (customizationSchema && customizationSchema.length > 0),
       estimatedProductionTime: estimatedHours || 2,
       images: images || [],
-      // customizationSchema: null remove o formulário; array atualiza — pedidos existentes ficam congelados
       customizationSchema: customizationSchema || null,
     },
   })
