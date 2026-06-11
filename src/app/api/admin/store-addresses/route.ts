@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         isActive: isActive ?? true,
       },
     })
-    return NextResponse.json(address)
+    return NextResponse.json(address, { status: 201 })
   } catch (err: any) {
     console.error('[store-addresses] POST error:', err)
     return NextResponse.json({ error: err.message || 'Erro ao criar endereço' }, { status: 500 })

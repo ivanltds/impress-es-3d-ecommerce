@@ -1,4 +1,4 @@
-// ─── M04: Production API (unified with Shipping) ───
+// ─── M04: Production API ───
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
@@ -7,11 +7,10 @@ export async function GET() {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Only show items that are NOT in shipping stage yet
   const orders = await prisma.order.findMany({
     where: {
       paymentStatus: 'paid',
-      fulfillmentStatus: { notIn: ['shipped', 'awaiting_pickup', 'posted', 'in_transit', 'delivered'] }, // not in shipping yet
+      fulfillmentStatus: { notIn: ['shipped', 'awaiting_pickup', 'posted', 'in_transit', 'delivered'] },
     },
     orderBy: { createdAt: 'desc' },
     include: {
@@ -48,19 +47,16 @@ export async function PATCH(request: NextRequest) {
 
   const { itemId, status, notes } = await request.json()
 
-  // Update item production status
   await prisma.orderItem.update({
     where: { id: itemId },
     data: { productionStatus: status, productionNotes: notes },
   })
 
-  // Sync order fulfillment status with production progress
   const item = await prisma.orderItem.findUnique({ where: { id: itemId }, select: { orderId: true } })
   if (item) {
     const orderItems = await prisma.orderItem.findMany({ where: { orderId: item.orderId } })
     const allShipped = orderItems.every((i) => i.productionStatus === 'shipped' || i.id === itemId)
 
-    // Map production status to order fulfillment status
     const statusMap: Record<string, string> = {
       pending: 'unfulfilled',
       in_progress: 'in_progress',
