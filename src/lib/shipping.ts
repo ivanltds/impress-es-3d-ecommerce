@@ -250,7 +250,8 @@ export async function purchaseLabel(
     name: customer.name || 'Cliente',
     phone: (customer.phone || '').replace(/\D/g, '') || '11999999999',
     email: customer.email || 'cliente@email.com',
-    document: (customer.document || '').replace(/\D/g, '') || '00000000000',
+    // document só inclui se tiver 11 ou 14 dígitos (CPF/CNPJ) — omite se inválido
+    ...((() => { const d = (customer.document || '').replace(/\D/g, ''); return (d.length === 11 || d.length === 14) ? { document: d } : {} })()),
     address: toDetails.address || 'Endereco',
     number:   toDetails.number  || 's/n',
     district: toDetails.district || 'Centro',
@@ -262,12 +263,21 @@ export async function purchaseLabel(
 
   async function meErr(label: string, res: Response): Promise<string> {
     const txt = await res.text()
-    console.error(`[shipping] ${label} HTTP ${res.status}:`, txt.slice(0, 400))
+    console.error(`[shipping] ${label} HTTP ${res.status}:`, txt.slice(0, 600))
     try {
       const j = JSON.parse(txt)
-      const first = j.errors ? Object.values(j.errors as Record<string, string[]>).flat()[0] : j.message
-      return first ? `${label}: ${first}` : `${label}: HTTP ${res.status}`
-    } catch { return `${label}: HTTP ${res.status}` }
+      // Melhor Envio pode retornar: { errors: { field: ["msg"] } } ou { message: "..." } ou { error: "..." }
+      if (j.errors && typeof j.errors === 'object') {
+        const msgs = Object.entries(j.errors as Record<string, unknown>)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : v}`)
+        if (msgs.length) return `${label}: ${msgs[0]}`
+      }
+      const msg = j.message || j.error || j.msg
+      if (msg) return `${label}: ${msg}`
+      return `${label}: HTTP ${res.status} — ${txt.slice(0, 200)}`
+    } catch {
+      return `${label}: HTTP ${res.status} — ${txt.slice(0, 200)}`
+    }
   }
 
   try {
