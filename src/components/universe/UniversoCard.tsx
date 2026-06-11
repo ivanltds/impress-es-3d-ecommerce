@@ -20,14 +20,6 @@ const UNIVERSE_GRADIENTS: Record<string, { from: string; to: string; text: strin
   'auto':       { from: '#0d0d0d', to: '#1a0808', text: '#c0392b' },
 }
 
-function getEmoji(slug: string): string {
-  if (slug === 'gaming') return '🎮'
-  if (slug === 'anime-nerd') return '⚡'
-  if (slug === 'casa-decor') return '🏠'
-  if (slug === 'presentes') return '🎁'
-  return '🚗'
-}
-
 export function UniversoCard({ slug, name, tagline, comingSoon, isPreferred }: Props) {
   const config = UNIVERSE_CONFIG[slug]
   const grad = UNIVERSE_GRADIENTS[slug] ?? { from: '#111', to: '#222', text: '#fff' }
@@ -51,7 +43,12 @@ export function UniversoCard({ slug, name, tagline, comingSoon, isPreferred }: P
         style={{ background: 'radial-gradient(ellipse at top, ' + grad.text + '20 0%, transparent 60%)' }}
       />
       <div className="relative z-10 p-6 flex flex-col h-full min-h-[200px]">
-        <div className="text-4xl mb-4">{getEmoji(slug)}</div>
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black mb-4"
+          style={{ background: grad.text + '20', color: grad.text }}
+        >
+          {slug.slice(0, 2).toUpperCase()}
+        </div>
         <h3 className="font-black text-xl mb-2" style={{ color: grad.text }}>
           {name}
         </h3>
@@ -85,7 +82,7 @@ export function UniversoCard({ slug, name, tagline, comingSoon, isPreferred }: P
           className="absolute top-3 left-3 text-xs px-2 py-0.5 rounded-full font-bold"
           style={{ background: grad.text, color: '#000' }}
         >
-          &#9733; Seu universo
+          Seu universo
         </div>
       )}
     </div>
