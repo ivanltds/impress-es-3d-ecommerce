@@ -183,6 +183,6 @@ describe('POST /api/admin/shipping/purchase', () => {
     const res = await POST(req as any)
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.trackingCode).toBe('BR123456789')
+        expect(body.trackingCode).toBe('BR123456789')
   })
 })

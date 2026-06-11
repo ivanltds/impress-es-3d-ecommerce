@@ -126,6 +126,7 @@ model Product {
   legalNotes             String?
   customizationSchema    Json?     // array de CustomizationField — define o formulário de personalização
   category               Category? @relation(fields: [categoryId], references: [id])
+  universes              ProductUniverse[]   // ← M05: relação M:N com universos
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
@@ -254,4 +255,43 @@ model StoreAddress {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ─── M05: Universos de Tema ───────────────────────────────────────────────────
+
+model Universe {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  comingSoon   Boolean   @default(false)
+  sortOrder    Int       @default(0)
+  products     ProductUniverse[]
+  testimonials Testimonial[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model ProductUniverse {
+  productId   String
+  universeId  String
+  product     Product   @relation(fields: [productId],   references: [id], onDelete: Cascade)
+  universe    Universe  @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  @@id([productId, universeId])
+  @@index([universeId])
+  @@index([productId])
+}
+
+model Testimonial {
+  id           String    @id @default(cuid())
+  authorName   String
+  authorPhoto  String?
+  productPhoto String?
+  text         String
+  universeId   String?
+  universe     Universe? @relation(fields: [universeId], references: [id], onDelete: SetNull)
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  @@index([isPublished])
+  @@index([universeId, isPublished])
 }

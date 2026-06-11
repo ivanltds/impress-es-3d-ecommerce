@@ -1,0 +1,52 @@
+/* UniverseThemeProvider.module.css */
+/* CSS custom properties scoped per universe — never pollutes :root */
+
+.universe_gaming {
+  --color-primary: #00ff41;
+  --color-secondary: #ff00ff;
+  --color-bg: #0a0a0a;
+  --color-text: #f0f0f0;
+  --color-card: #111111;
+  --color-border: #1a1a1a;
+  --color-accent: #ff00ff;
+}
+
+.universe_anime_nerd {
+  --color-primary: #c44dff;
+  --color-secondary: #ff6b9d;
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-card: #fff0f8;
+  --color-border: #f0d0e8;
+  --color-accent: #ff6b9d;
+}
+
+.universe_casa_decor {
+  --color-primary: #8b6914;
+  --color-secondary: #2c2c2c;
+  --color-bg: #faf8f5;
+  --color-text: #2c2c2c;
+  --color-card: #f5f0ea;
+  --color-border: #e8ddd0;
+  --color-accent: #8b6914;
+}
+
+.universe_presentes {
+  --color-primary: #e8521a;
+  --color-secondary: #2c2c2c;
+  --color-bg: #fff9f0;
+  --color-text: #2c2c2c;
+  --color-card: #fff4e8;
+  --color-border: #f0d8c0;
+  --color-accent: #e8521a;
+}
+
+.universe_auto {
+  --color-primary: #c0392b;
+  --color-secondary: #f5f5f5;
+  --color-bg: #1a1a1a;
+  --color-text: #f5f5f5;
+  --color-card: #242424;
+  --color-border: #333333;
+  --color-accent: #c0392b;
+}
