@@ -48,6 +48,7 @@ export default async function HomePage() {
 
   // Normalize universe data shape for UniversosSection
   // Fallback: se banco vazio, usar config estatica (DB recem-criado sem seed)
+  // FF08: incluir campos novos (cardImageUrl, heroImageUrl, tagline, bullets)
   const universeData = universes.length > 0
     ? (universes as any[]).map((u: any) => ({
         slug: u.slug as string,
@@ -55,6 +56,10 @@ export default async function HomePage() {
         comingSoon: Boolean(u.comingSoon),
         sortOrder: Number(u.sortOrder ?? 0),
         publishedProductCount: 0,
+        cardImageUrl: u.cardImageUrl ?? null,
+        heroImageUrl: u.heroImageUrl ?? null,
+        tagline: u.tagline ?? null,
+        bullets: u.bullets ?? [],
       }))
     : Object.values(UNIVERSE_CONFIG).map(c => ({
         slug: c.slug,
@@ -62,6 +67,10 @@ export default async function HomePage() {
         comingSoon: false,
         sortOrder: c.sortOrder,
         publishedProductCount: 0,
+        cardImageUrl: null,
+        heroImageUrl: null,
+        tagline: null,
+        bullets: [] as string[],
       }))
 
   return (

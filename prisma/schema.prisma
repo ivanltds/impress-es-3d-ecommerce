@@ -124,9 +124,9 @@ model Product {
   seoTitle               String?
   seoDescription         String?
   legalNotes             String?
-  customizationSchema    Json?     // array de CustomizationField — define o formulário de personalização
+  customizationSchema    Json?    // array de CustomizationField — define o formulário de personalização
   category               Category? @relation(fields: [categoryId], references: [id])
-  universes              ProductUniverse[]   // ← M05: relação M:N com universos
+  universes              ProductUniverse[]  // ← M05: relação M:N com universos
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
@@ -260,22 +260,31 @@ model StoreAddress {
 // ─── M05: Universos de Tema ───────────────────────────────────────────────────
 
 model Universe {
-  id           String    @id @default(cuid())
-  slug         String    @unique
+  id           String            @id @default(cuid())
+  slug         String            @unique
   name         String
-  comingSoon   Boolean   @default(false)
-  sortOrder    Int       @default(0)
+  comingSoon   Boolean           @default(false)
+  sortOrder    Int               @default(0)
+
+  // FF08: campos editáveis via admin
+  cardImageUrl String?  // URL pública Vercel Blob — null = fallback decorativo no pill
+  heroImageUrl String?  // URL pública Vercel Blob — null = fallback grid+glow no painel
+  tagline      String?  // quando null, usar UNIVERSE_CONFIG[slug].tagline
+  bullets      String[] // 3 bullets; vazio = usar UNIVERSE_DETAILS[slug].bullets
+
   products     ProductUniverse[]
   testimonials Testimonial[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model ProductUniverse {
-  productId   String
-  universeId  String
-  product     Product   @relation(fields: [productId],   references: [id], onDelete: Cascade)
-  universe    Universe  @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  productId  String
+  universeId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  universe   Universe @relation(fields: [universeId], references: [id], onDelete: Cascade)
+
   @@id([productId, universeId])
   @@index([universeId])
   @@index([productId])
@@ -292,6 +301,7 @@ model Testimonial {
   isPublished  Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
   @@index([isPublished])
   @@index([universeId, isPublished])
 }

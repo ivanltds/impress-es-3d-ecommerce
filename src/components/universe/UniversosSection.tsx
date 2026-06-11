@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { sortUniversesByPreference } from '@/lib/universe-utils'
+import { sortUniversesByPreference, getUniverseTagline, getUniverseBullets } from '@/lib/universe-utils'
 import { UNIVERSE_CONFIG } from '@/config/universes'
 
 interface UniverseData {
@@ -11,6 +11,10 @@ interface UniverseData {
   comingSoon: boolean
   sortOrder: number
   publishedProductCount?: number
+  cardImageUrl?: string | null
+  heroImageUrl?: string | null
+  tagline?: string | null
+  bullets?: string[]
 }
 
 interface Props {
@@ -79,6 +83,10 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
   const activeConfig = UNIVERSE_CONFIG[activeSlug]
   const details = UNIVERSE_DETAILS[activeSlug]
 
+  // FF08: tagline and bullets with fallback
+  const displayTagline = getUniverseTagline(activeUniverse?.tagline, activeSlug)
+  const displayBullets = getUniverseBullets(activeUniverse?.bullets, activeSlug)
+
   return (
     <section
       id="universos-section"
@@ -146,6 +154,14 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                     Seu universo
                   </span>
                 )}
+                {u.cardImageUrl ? (
+                  <img
+                    src={u.cardImageUrl}
+                    alt={u.name}
+                    data-testid={`card-universe-image-${u.slug}`}
+                    className="w-8 h-8 object-contain inline-block mr-1 align-middle"
+                  />
+                ) : null}
                 {cfg?.name ?? u.name}
               </button>
             )
@@ -171,10 +187,10 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                 {activeConfig?.name}
               </p>
               <h3 className="text-3xl md:text-4xl font-black text-white mb-3">
-                {activeConfig?.tagline}
+                {displayTagline}
               </h3>
               <ul className="space-y-3 mb-8">
-                {details?.bullets.map((b, i) => (
+                {displayBullets.map((b, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span
                       className="mt-1 w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center"
@@ -212,7 +228,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
               )}
             </div>
 
-            {/* Lado direito: painel visual decorativo */}
+            {/* Lado direito: imagem hero ou painel visual decorativo */}
             <div
               className="hidden md:flex items-center justify-center rounded-2xl overflow-hidden relative"
               style={{
@@ -221,46 +237,59 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                 minHeight: '320px',
               }}
             >
-              {/* Grid pattern */}
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(' + details?.accent + '40 1px, transparent 1px), linear-gradient(90deg, ' + details?.accent + '40 1px, transparent 1px)',
-                  backgroundSize: '40px 40px',
-                }}
-              />
-              {/* Glow central */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className="w-40 h-40 rounded-full blur-3xl"
-                  style={{ background: (details?.accent ?? '#fff') + '20' }}
+              {activeUniverse?.heroImageUrl ? (
+                /* FF08: imagem hero do banco sobrepoe o visual decorativo */
+                <img
+                  src={activeUniverse.heroImageUrl}
+                  alt={activeUniverse.name}
+                  data-testid="hero-universe-image"
+                  className="w-full h-full object-contain max-h-64"
                 />
-              </div>
-              {/* Nome grande */}
-              <div className="relative z-10 text-center px-8">
-                <div
-                  className="text-7xl font-black opacity-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
-                  style={{ color: details?.accent }}
-                >
-                  {activeConfig?.name}
-                </div>
-                <div className="relative">
-                  <p
-                    className="text-xs font-semibold tracking-widest uppercase mb-3"
-                    style={{ color: details?.accent }}
-                  >
-                    Universo
-                  </p>
-                  <h3 className="text-4xl font-black text-white">{activeConfig?.name}</h3>
-                  <p
-                    className="mt-2 text-sm"
-                    style={{ color: 'rgba(255,255,255,0.4)' }}
-                  >
-                    {activeConfig?.tagline}
-                  </p>
-                </div>
-              </div>
+              ) : (
+                /* Fallback: visual decorativo (grid + glow) */
+                <>
+                  {/* Grid pattern */}
+                  <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(' + details?.accent + '40 1px, transparent 1px), linear-gradient(90deg, ' + details?.accent + '40 1px, transparent 1px)',
+                      backgroundSize: '40px 40px',
+                    }}
+                  />
+                  {/* Glow central */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                      className="w-40 h-40 rounded-full blur-3xl"
+                      style={{ background: (details?.accent ?? '#fff') + '20' }}
+                    />
+                  </div>
+                  {/* Nome grande */}
+                  <div className="relative z-10 text-center px-8">
+                    <div
+                      className="text-7xl font-black opacity-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
+                      style={{ color: details?.accent }}
+                    >
+                      {activeConfig?.name}
+                    </div>
+                    <div className="relative">
+                      <p
+                        className="text-xs font-semibold tracking-widest uppercase mb-3"
+                        style={{ color: details?.accent }}
+                      >
+                        Universo
+                      </p>
+                      <h3 className="text-4xl font-black text-white">{activeConfig?.name}</h3>
+                      <p
+                        className="mt-2 text-sm"
+                        style={{ color: 'rgba(255,255,255,0.4)' }}
+                      >
+                        {displayTagline}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
