@@ -227,6 +227,16 @@ export async function purchaseLabel(
   fromAddress?: StoreAddressData,
   orderValue?: number
 ): Promise<LabelResult> {
+  // ⚠️ FF: MELHOR_ENVIO_MOCK=true — simula etiqueta sem consumir saldo
+  // ⚠️ TECH DEBT: Remover quando MELHOR_ENVIO_TOKEN tiver saldo em produção
+  if (process.env.MELHOR_ENVIO_MOCK === 'true') {
+    const mockDelay = () => new Promise((r) => setTimeout(r, 900))
+    await mockDelay()
+    const fakeTracking = `MOCK${Date.now()}BR`
+    console.log('[shipping] MOCK label:', fakeTracking, '| cep:', cep, '| service:', serviceId)
+    return { success: true, tracking: fakeTracking, price: 0 }
+  }
+
   const token = process.env.MELHOR_ENVIO_TOKEN
   if (!token) {
     return { success: false, error: 'MELHOR_ENVIO_TOKEN não configurado na Vercel' }
