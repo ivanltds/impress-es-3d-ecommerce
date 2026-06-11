@@ -47,13 +47,22 @@ export default async function HomePage() {
   )
 
   // Normalize universe data shape for UniversosSection
-  const universeData = (universes as any[]).map((u: any) => ({
-    slug: u.slug as string,
-    name: (u.name || (UNIVERSE_CONFIG[u.slug] ? UNIVERSE_CONFIG[u.slug].name : u.slug)) as string,
-    comingSoon: Boolean(u.comingSoon),
-    sortOrder: Number(u.sortOrder || 0),
-    publishedProductCount: 0,
-  }))
+  // Fallback: se banco vazio, usar config estatica (DB recem-criado sem seed)
+  const universeData = universes.length > 0
+    ? (universes as any[]).map((u: any) => ({
+        slug: u.slug as string,
+        name: (u.name || (UNIVERSE_CONFIG[u.slug] ? UNIVERSE_CONFIG[u.slug].name : u.slug)) as string,
+        comingSoon: Boolean(u.comingSoon),
+        sortOrder: Number(u.sortOrder ?? 0),
+        publishedProductCount: 0,
+      }))
+    : Object.values(UNIVERSE_CONFIG).map(c => ({
+        slug: c.slug,
+        name: c.name,
+        comingSoon: false,
+        sortOrder: c.sortOrder,
+        publishedProductCount: 0,
+      }))
 
   return (
     <main>

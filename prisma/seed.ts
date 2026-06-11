@@ -6,6 +6,24 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // ─── Universos ───
+  const universeSlugs = [
+    { slug: 'gaming',     name: 'Gaming',       comingSoon: false, sortOrder: 0 },
+    { slug: 'anime-nerd', name: 'Anime & Nerd',  comingSoon: false, sortOrder: 1 },
+    { slug: 'casa-decor', name: 'Casa & Decor',  comingSoon: false, sortOrder: 2 },
+    { slug: 'presentes',  name: 'Presentes',     comingSoon: false, sortOrder: 3 },
+    { slug: 'auto',       name: 'Auto',          comingSoon: true,  sortOrder: 4 },
+  ]
+
+  for (const u of universeSlugs) {
+    await prisma.universe.upsert({
+      where: { slug: u.slug },
+      update: {},
+      create: u,
+    })
+  }
+  console.log('✓ Universos criados')
+
   // Clean existing data
   await prisma.cartItem.deleteMany()
   await prisma.cart.deleteMany()
@@ -167,7 +185,7 @@ async function main() {
         name: 'Vaso Geométrico Decorativo',
         slug: 'vaso-geometrico',
         shortDescription: 'Vaso com design geométrico moderno. Perfeito para plantas pequenas e suculentas.',
-        longDescription: 'Design paramétrico com linhas limpas e ângulos precisos. Disponível em várias cores e tamanhos. À prova d\'água com acabamento selado.',
+        longDescription: "Design paramétrico com linhas limpas e ângulos precisos. Disponível em várias cores e tamanhos. À prova d'água com acabamento selado.",
         basePrice: 39.9,
         categoryId: categories[2].id,
         collectionId: 'home',
