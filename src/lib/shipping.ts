@@ -264,20 +264,8 @@ export async function purchaseLabel(
   async function meErr(label: string, res: Response): Promise<string> {
     const txt = await res.text()
     console.error(`[shipping] ${label} HTTP ${res.status}:`, txt.slice(0, 600))
-    try {
-      const j = JSON.parse(txt)
-      // Melhor Envio pode retornar: { errors: { field: ["msg"] } } ou { message: "..." } ou { error: "..." }
-      if (j.errors && typeof j.errors === 'object') {
-        const msgs = Object.entries(j.errors as Record<string, unknown>)
-          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : v}`)
-        if (msgs.length) return `${label}: ${msgs[0]}`
-      }
-      const msg = j.message || j.error || j.msg
-      if (msg) return `${label}: ${msg}`
-      return `${label}: HTTP ${res.status} — ${txt.slice(0, 200)}`
-    } catch {
-      return `${label}: HTTP ${res.status} — ${txt.slice(0, 200)}`
-    }
+    // Retorna sempre o texto bruto para diagnóstico
+    return `${label}: ${txt.slice(0, 300)}`
   }
 
   try {
