@@ -9,9 +9,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, street, number, complement, neighborhood, city, state, cep, isActive } = body
+    const { name, phone, email, document, street, number, complement, neighborhood, city, state, cep, isActive } = body
     const data: Record<string, unknown> = {}
     if (name !== undefined) data.name = name
+    if (phone !== undefined) data.phone = phone
+    if (email !== undefined) data.email = email
+    if (document !== undefined) data.document = String(document).replace(/\D/g, '')
     if (street !== undefined) data.street = street
     if (number !== undefined) data.number = number
     if (complement !== undefined) data.complement = complement

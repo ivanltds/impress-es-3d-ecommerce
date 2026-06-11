@@ -20,13 +20,24 @@ export async function POST(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const body = await request.json()
-    const { name, street, number, complement, neighborhood, city, state, cep, isActive } = body
+    const { name, phone, email, document, street, number, complement, neighborhood, city, state, cep, isActive } = body
     if (!name || !street || !number || !city || !state || !cep) {
       return NextResponse.json({ error: 'Campos obrigatórios: name, street, number, city, state, cep' }, { status: 400 })
     }
     const formatted = cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
     const address = await prisma.storeAddress.create({
-      data: { name, street, number, complement: complement || null, neighborhood: neighborhood || null, city, state, cep: formatted, isActive: isActive ?? true },
+      data: {
+        name,
+        phone:        phone        || '',
+        email:        email        || '',
+        document:     (document || '').replace(/\D/g, ''),
+        street, number,
+        complement:   complement   || null,
+        neighborhood: neighborhood || null,
+        city, state,
+        cep: formatted,
+        isActive: isActive ?? true,
+      },
     })
     return NextResponse.json(address)
   } catch (err: any) {
