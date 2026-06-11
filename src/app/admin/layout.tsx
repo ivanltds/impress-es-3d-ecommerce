@@ -13,7 +13,7 @@ const NAV = [
   { href: '/admin/producao', label: 'Produção', icon: ClipboardList },
   { href: '/admin/envio', label: 'Envio', icon: Truck },
   { href: '/admin/leads', label: 'Leads', icon: Users },
-  { href: '/admin/configuracoes/enderecos', label: 'Endereços', icon: Settings },
+  { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

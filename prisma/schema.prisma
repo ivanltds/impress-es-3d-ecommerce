@@ -230,6 +230,13 @@ model OrderItem {
   order                  Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
+// ─── StoreSettings: configurações gerais da loja (singleton id="singleton") ───
+model StoreSettings {
+  id             String   @id @default("singleton")
+  whatsappPhone  String   @default("")  // ex: "5511999999999" (com DDI, sem +)
+  updatedAt      DateTime @updatedAt
+}
+
 // ─── StoreAddress: endereços de origem da loja para etiquetas ───
 model StoreAddress {
   id           String   @id @default(cuid())

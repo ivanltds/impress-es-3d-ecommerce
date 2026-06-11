@@ -8,8 +8,7 @@ import type {
   CustomizationSnapshot,
 } from '@/lib/customization'
 import { calcCustomizationTotal, FILE_LIMITS } from '@/lib/customization'
-
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || '55'
+import { useStoreSettings } from '@/components/shared/store-settings-provider'
 
 interface Props {
   productName: string
@@ -28,11 +27,13 @@ function FileUploadField({
   value,
   onChange,
   productName,
+  whatsapp,
 }: {
   field: CustomizationField
   value: CustomizationValue | undefined
   onChange: (v: CustomizationValue | null) => void
   productName: string
+  whatsapp: string
 }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -54,7 +55,6 @@ function FileUploadField({
     const data = await res.json()
 
     if (res.status === 413) {
-      // Arquivo grande demais — redirecionar para WhatsApp
       const msg = encodeURIComponent(
         `Olá! Quero personalizar o produto "${productName}" mas meu arquivo (${file.name}) tem ${(file.size / 1024 / 1024).toFixed(1)}MB e excede o limite. Podem me ajudar?`
       )
@@ -132,7 +132,7 @@ function FileUploadField({
                 O limite é {limits?.label}. Você pode enviar o arquivo diretamente pelo WhatsApp e nossa equipe cuida do resto.
               </p>
               <a
-                href={`https://wa.me/${WHATSAPP}?text=${waMsg}`}
+                href={`https://wa.me/${whatsapp}?text=${waMsg}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600"
@@ -161,6 +161,7 @@ function FileUploadField({
 }
 
 export function CustomizationModal({ productName, basePrice, schema, onConfirm, onClose }: Props) {
+  const { whatsappPhone } = useStoreSettings()
   const [values, setValues] = useState<Record<string, CustomizationValue>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -331,6 +332,7 @@ export function CustomizationModal({ productName, basePrice, schema, onConfirm, 
                   value={values[field.id]}
                   onChange={(v) => setValue(field.id, v)}
                   productName={productName}
+                  whatsapp={whatsappPhone}
                 />
               )}
 
@@ -381,6 +383,7 @@ export function CustomizationModal({ productName, basePrice, schema, onConfirm, 
 
 // ─── Versão "sugestão" para produtos sem schema ───
 export function CustomizationSuggestion({ productName }: { productName: string }) {
+  const { whatsappPhone } = useStoreSettings()
   const msg = encodeURIComponent(
     `Olá! Tenho interesse em personalizar o produto "${productName}". Quais são as opções disponíveis?`
   )
@@ -391,7 +394,7 @@ export function CustomizationSuggestion({ productName }: { productName: string }
         Quer algo diferente ou personalizado?
       </p>
       <a
-        href={`https://wa.me/${WHATSAPP}?text=${msg}`}
+        href={`https://wa.me/${whatsappPhone}?text=${msg}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex shrink-0 items-center gap-1 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600"
