@@ -35,6 +35,7 @@ export async function GET() {
       total: o.total,
       estimatedHours: 2,
       cep: o.cep || '',
+      trackingCode: o.trackingCode || '',
     }))
   )
 

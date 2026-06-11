@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     : 'https://melhorenvio.com.br/api/v2'
 
   const body = {
-    from: { postal_code: '06110000' },
+    from: { postal_code: (process.env.MELHOR_ENVIO_FROM_CEP || '06110-000').replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2') },
     to: { postal_code: cep.replace(/\D/g, '') },
     products: [{ id: '1', width: 15, height: 10, length: 20, weight: 0.3, quantity: 1 }],
     options: { receipt: false, own_hand: false },
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       sandbox,
       baseUrl,
       tokenPrefix: token.slice(0, 12) + '...',
+      fromCep: process.env.MELHOR_ENVIO_FROM_CEP || '(não configurado — usando 06110-000)',
       cep,
       raw: parsed,
     })
