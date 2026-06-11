@@ -276,13 +276,17 @@ export async function purchaseLabel(
       from,
       to,
       service: Number(serviceId),
-      // Dimensões padrão para peça impressa 3D em caixa de envio
-      // height/width/length em cm | weight em kg | unitary_value = valor real do pedido
+      // volumes: dimensões físicas da embalagem (cm / kg)
       volumes: [{
         height: 15,
         width: 20,
         length: 25,
         weight: 0.5,
+      }],
+      // products: declaração de conteúdo obrigatória
+      products: [{
+        name: 'Peça impressa em 3D',
+        quantity: 1,
         unitary_value: orderValue && orderValue > 0 ? Math.ceil(orderValue) : 100,
       }],
       options: { receipt: false, own_hand: false, insurance_value: 0 },
