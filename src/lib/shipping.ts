@@ -233,32 +233,39 @@ export async function purchaseLabel(
   }
 
   // ─── FROM (origem/loja) ───
+  const fromDoc = (fromAddress?.document || '').replace(/\D/g, '')
+  const fromIsCNPJ = fromDoc.length === 14
   const from = {
-    name: fromAddress?.name || 'Impressao 3D',
-    phone: (fromAddress?.phone || '').replace(/\D/g, '') || '11999999999',
-    email: fromAddress?.email || 'loja@email.com',
-    document: (fromAddress?.document || '').replace(/\D/g, '') || '00000000000',
-    address: fromAddress ? fromAddress.street : 'Rua Exemplo',
-    number: fromAddress?.number || 's/n',
-    district: fromAddress?.neighborhood || 'Centro',
-    city: fromAddress?.city || 'Osasco',
+    name:    fromAddress?.name  || 'Impressao 3D',
+    phone:   (fromAddress?.phone  || '').replace(/\D/g, '') || '11999999999',
+    email:   fromAddress?.email   || 'loja@email.com',
+    // CPF (11 dígitos) → document; CNPJ (14 dígitos) → company_document
+    ...(fromIsCNPJ
+      ? { document: '', company_document: fromDoc, state_register: 'ISENTO' }
+      : { document: fromDoc || '00000000000' }
+    ),
+    address:    fromAddress?.street      || 'Rua Exemplo',
+    number:     fromAddress?.number      || 's/n',
+    district:   fromAddress?.neighborhood || 'Centro',
+    city:       fromAddress?.city        || 'Osasco',
     state_abbr: (fromAddress?.state || 'SP').toUpperCase(),
     country_id: 'BR',
     postal_code: fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000'),
   }
 
   // ─── TO (destino/cliente) ───
+  const toDoc = (customer.document || '').replace(/\D/g, '')
   const to = {
-    name: customer.name || 'Cliente',
+    name:  customer.name  || 'Cliente',
     phone: (customer.phone || '').replace(/\D/g, '') || '11999999999',
     email: customer.email || 'cliente@email.com',
-    // document só inclui se tiver 11 ou 14 dígitos (CPF/CNPJ) — omite se inválido
-    ...((() => { const d = (customer.document || '').replace(/\D/g, ''); return (d.length === 11 || d.length === 14) ? { document: d } : {} })()),
-    address: toDetails.address || 'Endereco',
-    number:   toDetails.number  || 's/n',
-    district: toDetails.district || 'Centro',
-    city:     toDetails.city    || 'Cidade',
-    state_abbr: (toDetails.state || 'SP').toUpperCase(),
+    // Inclui document (CPF) apenas se válido (11 dígitos)
+    ...(toDoc.length === 11 ? { document: toDoc } : {}),
+    address:    toDetails.address  || 'Endereco',
+    number:     toDetails.number   || 's/n',
+    district:   toDetails.district || 'Centro',
+    city:       toDetails.city     || 'Cidade',
+    state_abbr: (toDetails.state   || 'SP').toUpperCase(),
     country_id: 'BR',
     postal_code: formatCep(cep),
   }
@@ -283,13 +290,19 @@ export async function purchaseLabel(
         length: 25,
         weight: 0.5,
       }],
-      // products: declaração de conteúdo obrigatória
+      // products: declaração de conteúdo (quantity e unitary_value devem ser strings)
       products: [{
         name: 'Peça impressa em 3D',
-        quantity: 1,
-        unitary_value: orderValue && orderValue > 0 ? Math.ceil(orderValue) : 100,
+        quantity: '1',
+        unitary_value: String(orderValue && orderValue > 0 ? Math.ceil(orderValue) : 100),
       }],
-      options: { receipt: false, own_hand: false, insurance_value: 0 },
+      options: {
+        receipt: false,
+        own_hand: false,
+        reverse: false,
+        non_commercial: true,
+        insurance_value: orderValue && orderValue > 0 ? Math.ceil(orderValue) : 100,
+      },
     }
     console.log('[shipping] cart body:', JSON.stringify({ from: body.from, to: body.to, service: body.service }))
 
