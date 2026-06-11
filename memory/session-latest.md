@@ -1,94 +1,104 @@
 # Session Latest — 3DPrint Store
 
-## Data: 2026-06-11 (atualizado)
+## Data: 2026-06-11
 
-## Milestone Ativo: M04 (Fulfillment)
-## Fase: Implementação concluída (aguardando deploy + teste)
-## Gate Pendente: G3 (testes passando) → G4 (QA verifica deploy preview)
-
----
-
-## Último Progresso
-
-### Feature: Melhor Envio — integração completa ✅
-Todos os erros de validação da API foram resolvidos. O Cart step agora sucede.
-Último erro confirmado pelo PO: "saldo insuficiente" no Checkout — significa que Cart passou!
-
-Arquivos modificados (Melhor Envio + schema + UI):
-- `prisma/schema.prisma` — `User.document`, `Order.shippingStreet/Number/District/City/State/trackingCode`
-- `src/lib/shipping.ts` — MOCK FF, from{} CPF/CNPJ, to{} real address, volumes + products, options completas
-- `src/app/checkout/page.tsx` — campo CPF + select UF
-- `src/app/api/checkout/route.ts` — salva campos estruturados de endereço
-- `src/app/api/admin/shipping/purchase/route.ts` — usa campos estruturados, salva trackingCode separado
-- `src/app/api/admin/store-addresses/route.ts` (POST) — inclui phone/email/document, normaliza state uppercase
-- `src/app/api/admin/store-addresses/[id]/route.ts` (PATCH) — inclui phone/email/document, normaliza state uppercase
-- `src/app/api/admin/production/route.ts` — GET retorna `trackingCode`
-- `.env.example` — documenta MELHOR_ENVIO_MOCK
-
-### Feature: Tracking code no kanban ✅
-`src/app/admin/producao/page.tsx` — badge de rastreio + tooltip de instrução de entrega
-- Componente `ShippingTooltip`: badge colorido (azul = real, âmbar = MOCK)
-- Tooltip hover/click: 4 passos de instrução + link direto melhorenvio.com.br/envios
-- Badge aparece nas cards da coluna "Enviado p/ Entrega" e no modal de detalhe
-- Após `confirmShipping` bem-sucedido, estado local atualizado com `trackingCode: data.tracking`
-
-### Feature: Sistema de personalização completo ✅
-Arquivos criados/modificados:
-- `src/lib/customization.ts` — tipos, FILE_LIMITS, calcCustomizationTotal
-- `src/app/api/uploads/customization/route.ts` — upload de arquivos (413 p/ arquivos grandes)
-- `src/components/admin/customization-builder.tsx` — builder visual p/ admin
-- `src/components/shop/customization-modal.tsx` — modal do cliente + CustomizationSuggestion
-- `src/components/shop/product-info.tsx` — CTAs dinâmicos, handleBuyNow, handleModalConfirm
-- `src/app/admin/produtos/novo/page.tsx` — toggle + CustomizationBuilder
-- `src/app/admin/produtos/[id]/page.tsx` — carrega/salva schema
-- `src/app/api/admin/products/create/route.ts` — salva customizationSchema
-- `src/app/api/admin/products/[id]/route.ts` — PATCH customizationSchema
-- `src/app/carrinho/page.tsx` — CustomizationSummary colapsável, breakdown de preço
-- `src/app/admin/producao/page.tsx` — CustomizationDetail no modal de detalhe do kanban
-- `prisma/schema.prisma` — `customizationSchema Json?`, `customizationPrice Float @default(0)`
-
-### Users/DB management ✅
-- `kaiquebezerramqs@gmail.com` → admin
-- `igorltdz@gmail.com` criado como admin (senha: 12345678)
-- Todos os pedidos e leads deletados
-
-### Auth redirects + Header ✅
-- Admin login → `/admin`, cliente → `/produtos`
-- Header: "Olá, {nome}" + dropdown por role (admin vs cliente)
-- `src/components/shared/providers.tsx` — SessionProvider wrapper
-- `src/app/layout.tsx` — usa Providers
-
-### Product gallery fix ✅
-- `src/components/shop/product-gallery.tsx` — reescrito para usar images[] real
+## Milestone Ativo: M04 (Admin + Operations + Analytics)
+## Fase: Implementação concluída — 🚧 G4 pendente (homologação PO)
+## Gate Pendente: G4 — Product Owner homologa deploy preview
 
 ---
 
-## Bloqueios / Pendências
+## Scorecard M04
 
-1. **`prisma db push`** — usuário deve rodar localmente:
-   ```
-   npx prisma db push
-   npx prisma generate
-   ```
+| Feature | Cenários | Implementados |
+|---------|:---:|:---:|
+| F1: Admin CRUD Produtos | 4 | 4 ✅ |
+| F2: Gestão de Pedidos | 3 | 3 ✅ |
+| F3: Fila de Produção (Kanban) | 7 | 6 ✅ / 1 ❌ (3.7 falha) |
+| F4: Dashboard Analytics | 3 | 3 ✅ |
+| F5: Marketing Analytics | 4 | 1 ✅ / 3 ❌ (Pixel, UTM) |
+| **Total spec** | **21** | **17 ✅ / 4 ❌** |
 
-2. **`MELHOR_ENVIO_MOCK=true`** — definir na Vercel para testar sem saldo real
-
-3. **Commit + push** — usuário deve executar:
-   ```
-   git add -A
-   git commit -m "feat(M04): Melhor Envio completo — mock FF, address fields, tracking badge com tooltip"
-   git push
-   ```
-
-4. **Testes E2E** — 2 flaky/skipped ainda pendentes.
-
-5. **Pagamento real** (Stripe/MercadoPago) — backlog FF01.
+Fura-filas executados: FF02, FF03, FF04, FF05, FF06, FF07 (todos ✅)
+Débitos: TD01 (saldo Melhor Envio)
 
 ---
 
-## Próximo Passo Sugerido
+## Funcionalidades implementadas (completo)
 
-1. Rodar `npx prisma db push` (adiciona colunas novas no Neon)
-2. Definir `MELHOR_ENVIO_MOCK=true` na Vercel
-3. Commit + push → deploy preview
-4. Testar fluxo completo: checkout com CPF+UF → produção → envio → badge de rastreio no kanban
+### M04 core
+- Admin CRUD produtos (criar, editar, listar, arquivar)
+- Gestão de pedidos com filtro abertos/concluídos
+- Kanban produção 5 colunas com drag-and-drop
+- Dashboard analytics (métricas, gráfico, top produtos)
+- Lead capture form + kanban de leads
+
+### FF02 — Fluxo integrado + Melhor Envio
+- Fluxo Lead → Pedido → Produção → Envio
+- API Melhor Envio: Cart → Checkout → Generate (3 etapas)
+- StoreAddress: endereços de origem cadastráveis
+- CPF no checkout, campos de endereço estruturados no Order
+- MELHOR_ENVIO_MOCK=true para dev sem saldo
+
+### FF03 — Modal de envio
+- Modal abre ao arrastar para "Enviado p/ Entrega"
+- Seleção de endereço de origem + CEP + cotação + compra
+- Badge ShippingTooltip (azul=real, âmbar=MOCK) no kanban
+
+### FF04 — Sistema de personalização
+- 7 tipos de campo (text, textarea, color_select, size_select, option_select, image_ref, file_3d)
+- Builder visual admin + Modal cliente
+- Upload de arquivos (8MB img / 20MB 3D) com fallback WhatsApp
+- Precificação adicional por campo/opção
+- Snapshot congelado no pedido
+- CustomizationDetail no modal do kanban
+
+### FF05 — Auth redirects + Header
+- Admin login → /admin, cliente → /produtos
+- Header: "Olá, {nome}", dropdown por role
+- SessionProvider + StoreSettingsProvider no layout
+
+### FF06 — Product gallery + Comprar Agora
+- Galeria de produto corrigida (imagens reais, lightbox, thumbnails)
+- Botão "Comprar Agora" → adiciona + navega para /carrinho
+
+### FF07 — StoreSettings + WhatsApp
+- Model StoreSettings singleton no banco
+- /admin/configuracoes: campo WhatsApp + link de teste
+- useStoreSettings() hook para componentes
+
+---
+
+## Pendências operacionais
+
+| # | Pendência | Prioridade |
+|---|-----------|-----------|
+| TD01 | Recarregar saldo Melhor Envio (mín R$10) | 🔴 Antes do go-live |
+| — | `npx prisma db push && npx prisma generate` | 🔴 Imediato |
+| — | `MELHOR_ENVIO_MOCK=true` na Vercel | 🟡 Para staging |
+| — | `NEXT_PUBLIC_WHATSAPP_PHONE` pode ser removida (substituída pelo DB) | 🟢 Limpeza |
+| — | Commit + push de todas as mudanças | 🔴 Imediato |
+
+```bash
+npx prisma db push
+npx prisma generate
+git add -A
+git commit -m "feat(M04): sistema completo — personalização, auth, settings, fura-filas documentados"
+git push
+```
+
+---
+
+## Cenários pendentes da spec M04 (backlog)
+
+- 3.7: Registrar falha de produção
+- 5.1: Meta Pixel — PageView
+- 5.2: Meta Pixel — evento Purchase
+- 5.3: Captura de UTM nos pedidos
+
+---
+
+## Próximo passo
+
+**G4:** PO homologa deploy preview do M04 completo.
+Após G4 → G5 (retrospective) → M05 ou endereçar cenários pendentes.

@@ -1,8 +1,15 @@
-# 🚨 FF02: Fluxo Integrado Lead → Pedido → Produção → Envio
+# 🚨 FF02: Fluxo Integrado Lead → Pedido → Produção → Envio + Melhor Envio API
 
-> **Status:** IMPLEMENTADO
+> **Status:** ✅ IMPLEMENTADO
 > **Sprint:** M04
 > **Criado:** 2026-06-10
+> **Concluído:** 2026-06-11
+
+---
+
+## Descrição
+
+Implementação do fluxo operacional completo ponta a ponta, incluindo integração real com a API da Melhor Envio para cotação e compra de etiquetas de envio.
 
 ---
 
@@ -60,14 +67,15 @@
 │                                                               │
 │    Ao arrastar pra "Enviado p/ Entrega":                      │
 │      → Abre modal de envio                                    │
-│      → CEP preenchido automaticamente (Order.cep)             │
-│      → Serviços Melhor Envio carregam (se token presente)    │
+│      → Seleciona endereço de origem (StoreAddress)            │
+│      → CEP de destino preenchível manualmente                 │
+│      → Serviços Melhor Envio cotados via API                  │
 │      → Mais barato pré-selecionado                            │
 │      → "Comprar Etiqueta" → POST /api/admin/shipping/purchase │
-│        → Compra etiqueta via API (cart → checkout → generate) │
-│        → Tracking salvo no pedido                             │
+│        → Cart → Checkout → Generate (API Melhor Envio)        │
+│        → trackingCode salvo no OrderItem                      │
+│        → Badge de rastreio aparece no card do kanban          │
 │        → Order.fulfillmentStatus = "shipped"                  │
-│        → SAI da produção, ENTRA no envio                      │
 └──────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -80,114 +88,85 @@
 │    Só mostra pedidos com fulfillmentStatus IN                 │
 │    ('shipped', 'posted', 'in_transit', 'delivered')           │
 │                                                               │
-│    Cada movimento: PATCH /api/admin/shipping                  │
-│      → Order.fulfillmentStatus atualizado                     │
-│                                                               │
 │    Ao chegar em "Entregue":                                   │
 │      → Order.fulfillmentStatus = "delivered"                  │
 │      → SAI dos pedidos abertos                                │
-│      → Toggle "Concluídos" mostra                             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## REGRAS DO FLUXO
+## Integração Melhor Envio — Detalhes Técnicos
 
-| # | Regra |
-|---|-------|
-| R1 | Um pedido NUNCA aparece em Produção e Envio ao mesmo tempo |
-| R2 | Produção termina em "Enviado p/ Entrega" → Envio começa em "Postado" |
-| R3 | Status do pedido em /admin/pedidos reflete o último status do kanban |
-| R4 | Pedidos abertos = fulfillmentStatus != 'delivered' |
-| R5 | Todo movimento de card persiste no banco (NUNCA localStorage) |
-| R6 | CEP armazenado no campo `Order.cep` (não em JSON no notes) |
+### Feature Flag
+- `MELHOR_ENVIO_MOCK=true` → simula cotação e compra sem consumir saldo
+- `MELHOR_ENVIO_MOCK=false` → produção real (exige saldo na conta)
+
+### Fluxo API (3 etapas obrigatórias)
+```
+POST /api/me/cart           → adiciona itens ao carrinho (from/to/volumes/products)
+POST /api/me/cart/checkout  → converte carrinho em pedido
+POST /api/me/orders/generate → gera etiqueta PDF
+```
+
+### Modelo de dados adicionado
+```prisma
+model StoreAddress {
+  id, name, phone, email, document (CPF/CNPJ)
+  street, number, complement, neighborhood
+  city, state (UF), cep, isActive
+}
+
+// Adicionado a User:
+document String?  // CPF sem pontuação
+
+// Adicionado a Order:
+shippingStreet, shippingNumber, shippingDistrict
+shippingCity, shippingState, trackingCode
+```
+
+### Dados coletados no checkout
+- CPF do cliente (salvo em `User.document`)
+- Endereço completo estruturado (campos individuais, não concatenados)
+- UF (estado) em campo separado
+
+### Badge de rastreio no kanban
+- `ShippingTooltip`: badge azul (real) ou âmbar (MOCK) com código
+- Tooltip hover: 4 passos de instrução + link melhorenvio.com.br/envios
 
 ---
 
-## MAPEAMENTO DE STATUS
+## ⚠️ Débito Técnico — ver TD01
 
-### Order.fulfillmentStatus
-
-| Valor | Significa | Kanban | Pedidos |
-|-------|-----------|--------|---------|
-| `unfulfilled` | Pagamento ok, produção pendente | Produção (Aguardando) | Aberto |
-| `in_progress` | Em produção | Produção (Em Produção/Acabamento/Embalado) | Aberto |
-| `shipped` | Enviado p/ entrega | Envio (Postado/Em Trânsito) | Aberto |
-| `delivered` | Entregue ao cliente | Envio (Entregue) | Concluído |
-
-### OrderItem.productionStatus
-
-| Valor | Significa | Coluna no Kanban |
-|-------|-----------|-----------------|
-| `pending` | Aguardando início | Aguardando |
-| `in_progress` | Impressão em andamento | Em Produção |
-| `finishing` | Lixamento/pintura | Acabamento |
-| `packed` | Pronto pra envio | Embalado |
-| `shipped` | Enviado | Enviado p/ Entrega |
+A API de compra de etiquetas requer **saldo na conta Melhor Envio**. Em ambiente de desenvolvimento/staging, o saldo é zero, resultando em erro "Saldo insuficiente". O `MELHOR_ENVIO_MOCK=true` contorna esse problema. Ver `PRD/debitos/TD01-saldo-melhor-envio.md`.
 
 ---
 
-## APIs ENVOLVIDAS
+## Arquivos modificados
 
-| API | Método | Função |
-|-----|--------|--------|
-| `/api/admin/leads` | GET | Lista leads |
-| `/api/admin/leads` | POST | Cria lead (formulário público) |
-| `/api/admin/leads` | PATCH | Atualiza status do lead |
-| `/api/checkout` | POST | Cria Order + OrderItems (com CEP) |
-| `/api/admin/orders` | GET | Lista pedidos |
-| `/api/admin/production` | GET | Itens em produção |
-| `/api/admin/production` | PATCH | Atualiza status de produção |
-| `/api/admin/shipping` | GET | Pedidos em envio |
-| `/api/admin/shipping` | PATCH | Atualiza status de envio |
-| `/api/admin/shipping/purchase` | GET | Opções de frete (Melhor Envio) |
-| `/api/admin/shipping/purchase` | POST | Compra etiqueta (Melhor Envio) |
-
----
-
-## PÁGINAS
-
-| Rota | Função | Filtro padrão |
-|------|--------|---------------|
-| `/admin/leads` | Kanban CRM: Novo → Em Atendimento → Aguardando Pgto → Convertido → Perdido | — |
-| `/admin/pedidos` | Grid/Lista de pedidos | Abertos (toggle concluídos) |
-| `/admin/producao` | Kanban 5 colunas | Pedidos pagos, não enviados |
-| `/admin/envio` | Kanban 3 colunas | Pedidos enviados, não entregues |
+| Arquivo | Mudança |
+|---------|---------|
+| `prisma/schema.prisma` | StoreAddress model, User.document, Order shipping fields + trackingCode |
+| `src/lib/shipping.ts` | MOCK FF, from{} CPF/CNPJ, to{} campos reais, volumes + products |
+| `src/app/checkout/page.tsx` | Campo CPF + select UF |
+| `src/app/api/checkout/route.ts` | Salva campos estruturados de endereço |
+| `src/app/api/admin/shipping/purchase/route.ts` | Usa campos estruturados, 3 etapas API, salva trackingCode |
+| `src/app/api/admin/store-addresses/route.ts` | CRUD completo com phone/email/document |
+| `src/app/api/admin/store-addresses/[id]/route.ts` | PATCH com normalização de state |
+| `src/app/api/admin/production/route.ts` | GET retorna trackingCode |
+| `src/app/admin/producao/page.tsx` | Modal envio, ShippingTooltip, badge no kanban |
+| `src/app/admin/configuracoes/enderecos/page.tsx` | CRUD visual de endereços de origem |
+| `.env.example` | Documenta MELHOR_ENVIO_MOCK, MELHOR_ENVIO_TOKEN |
 
 ---
 
-## MODELO DE DADOS
+## Status dos Gates
 
-### Lead (tabela)
-```
-id, name, email, phone, source, interestCollection, message,
-status, notes, orderId, paymentLink, createdAt, updatedAt
-```
-
-### Order (tabela)
-```
-id, userId, orderNumber, status, paymentStatus, fulfillmentStatus,
-subtotal, shippingCost, discount, total, currency, sourceChannel,
-notes, themeSnapshot, cep, createdAt
-```
-
-### OrderItem (tabela)
-```
-id, orderId, productId, productNameSnapshot, skuSnapshot,
-qty, unitPrice, customizationSnapshot, productionStatus,
-productionNotes
-```
-
----
-
-## CHANGELOG
-
-### 2026-06-10
-- Fluxo integrado implementado
-- Lead → Pedido → Produção → Envio com status em tempo real
-- CEP como campo próprio na Order
-- Compra de etiqueta via Melhor Envio API
-- Modal de envio com seleção de serviço
-- Filtro de pedidos abertos/concluídos
-- Tela de envio com 3 colunas
+| Gate | Status |
+|------|--------|
+| G0 | ✅ Aprovado (PO validou escopo) |
+| G1 | ✅ Aprovado |
+| G2 | ⚠️ Sem testes formais (ciclo foi pulado) |
+| G3 | ✅ Build verde, funcional em MOCK |
+| G4 | 🚧 Aguardando teste com saldo real (ver TD01) |
+| G5 | 🚧 Pendente |

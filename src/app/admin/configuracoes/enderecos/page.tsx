@@ -187,15 +187,15 @@ export default function EnderecosPage() {
       ) : (
         <div className="space-y-3">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`rounded-xl border-2 p-4 transition-all ${addr.isActive ? 'border-green-200 bg-green-50/50' : 'border-border bg-muted/20'}`}>
+            <div key={addr.id} className={`rounded-xl border-2 p-4 transition-all ${addr.isActive ? 'border-green-500/40 bg-green-500/10' : 'border-border bg-muted/20'}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 min-w-0">
-                  <MapPin className={`mt-0.5 h-4 w-4 shrink-0 ${addr.isActive ? 'text-green-600' : 'text-muted-foreground'}`} />
+                  <MapPin className={`mt-0.5 h-4 w-4 shrink-0 ${addr.isActive ? 'text-green-500' : 'text-muted-foreground'}`} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-sm">{addr.name}</p>
                       {addr.isActive && (
-                        <span className="rounded-full bg-green-100 text-green-700 text-xs px-2 py-0.5 font-medium">Ativo</span>
+                        <span className="rounded-full bg-green-500/15 text-green-600 dark:text-green-400 text-xs px-2 py-0.5 font-medium">Ativo</span>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
@@ -214,13 +214,13 @@ export default function EnderecosPage() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => toggleActive(addr)} title={addr.isActive ? 'Desativar' : 'Ativar'}
-                    className={`rounded-lg p-2 transition-colors ${addr.isActive ? 'text-green-600 hover:bg-green-100' : 'text-muted-foreground hover:bg-muted'}`}>
+                    className={`rounded-lg p-2 transition-colors ${addr.isActive ? 'text-green-500 hover:bg-green-500/20' : 'text-muted-foreground hover:bg-muted'}`}>
                     {addr.isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
                   </button>
                   <button onClick={() => openEdit(addr)} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => remove(addr.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600">
+                  <button onClick={() => remove(addr.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-red-500/15 hover:text-red-500">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
