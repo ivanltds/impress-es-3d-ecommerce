@@ -72,11 +72,11 @@ interface StoreAddress {
 }
 
 const COLUMNS: { key: Status; label: string; color: string }[] = [
-  { key: 'pending', label: 'Aguardando', color: 'bg-amber-50 border-amber-200' },
-  { key: 'in_progress', label: 'Em Produção', color: 'bg-blue-50 border-blue-200' },
-  { key: 'finishing', label: 'Acabamento', color: 'bg-purple-50 border-purple-200' },
-  { key: 'packed', label: 'Embalado', color: 'bg-green-50 border-green-200' },
-  { key: 'shipped', label: 'Enviado p/ Entrega', color: 'bg-gray-50 border-gray-200' },
+  { key: 'pending', label: 'Aguardando', color: 'bg-amber-500/10 border-amber-500/30' },
+  { key: 'in_progress', label: 'Em Produção', color: 'bg-blue-500/10 border-blue-500/30' },
+  { key: 'finishing', label: 'Acabamento', color: 'bg-purple-500/10 border-purple-500/30' },
+  { key: 'packed', label: 'Embalado', color: 'bg-green-500/10 border-green-500/30' },
+  { key: 'shipped', label: 'Enviado p/ Entrega', color: 'bg-muted/30 border-border' },
 ]
 
 // ─── Tooltip de instrução de entrega ───
@@ -85,10 +85,10 @@ function ShippingTooltip({ tracking }: { tracking: string }) {
   const isMock = tracking.startsWith('MOCK')
   return (
     <div className="relative inline-flex items-center gap-1">
-      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono font-semibold ${isMock ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono font-semibold ${isMock ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'}`}>
         <Truck className="h-3 w-3" />
         {tracking}
-        {isMock && <span className="ml-1 rounded bg-amber-200 px-1 text-[10px]">MOCK</span>}
+        {isMock && <span className="ml-1 rounded bg-amber-500/25 px-1 text-[10px]">MOCK</span>}
       </span>
       <button
         onMouseEnter={() => setOpen(true)}
@@ -105,7 +105,7 @@ function ShippingTooltip({ tracking }: { tracking: string }) {
             <Truck className="h-4 w-4 text-primary" /> O que fazer com esta etiqueta
           </p>
           {isMock ? (
-            <p className="text-amber-700 bg-amber-50 rounded-lg p-2 mb-2">
+            <p className="text-amber-600 dark:text-amber-400 bg-amber-500/10 rounded-lg p-2 mb-2">
               ⚠️ Etiqueta simulada (MOCK). Nenhum frete real foi comprado. Ative saldo na Melhor Envio para ir a produção.
             </p>
           ) : null}

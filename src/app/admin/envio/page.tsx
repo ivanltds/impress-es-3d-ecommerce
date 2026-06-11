@@ -20,10 +20,10 @@ interface Shipment {
 }
 
 const COLUMNS: { key: ShippingStatus; label: string; color: string; icon: typeof Package }[] = [
-  { key: 'awaiting_pickup', label: 'Aguardando Postagem', color: 'bg-yellow-50 border-yellow-200', icon: Tag },
-  { key: 'posted', label: 'Postado', color: 'bg-blue-50 border-blue-200', icon: Truck },
-  { key: 'in_transit', label: 'Em Trânsito', color: 'bg-purple-50 border-purple-200', icon: Clock },
-  { key: 'delivered', label: 'Entregue', color: 'bg-green-50 border-green-200', icon: CheckCircle },
+  { key: 'awaiting_pickup', label: 'Aguardando Postagem', color: 'bg-yellow-500/10 border-yellow-500/30', icon: Tag },
+  { key: 'posted', label: 'Postado', color: 'bg-blue-500/10 border-blue-500/30', icon: Truck },
+  { key: 'in_transit', label: 'Em Trânsito', color: 'bg-purple-500/10 border-purple-500/30', icon: Clock },
+  { key: 'delivered', label: 'Entregue', color: 'bg-green-500/10 border-green-500/30', icon: CheckCircle },
 ]
 
 export default function EnvioPage() {
