@@ -20,7 +20,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
   const sorted = sortUniversesByPreference(universes, preferredSlug)
 
   return (
-    <section data-testid="universos-section" className="py-12">
+    <section id="universos-section" data-testid="universos-section" className="py-12">
       <h2 className="text-2xl font-bold text-center mb-8">Escolha seu universo</h2>
       <div
         data-testid="universos-carousel-dots"
