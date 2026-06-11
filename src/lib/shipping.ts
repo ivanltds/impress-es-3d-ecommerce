@@ -240,7 +240,7 @@ export async function purchaseLabel(
     number: fromAddress?.number || 's/n',
     district: fromAddress?.neighborhood || 'Centro',
     city: fromAddress?.city || 'Osasco',
-    state_abbr: fromAddress?.state || 'SP',
+    state_abbr: (fromAddress?.state || 'SP').toUpperCase(),
     country_id: 'BR',
     postal_code: fromAddress ? formatCep(fromAddress.cep) : formatCep(process.env.MELHOR_ENVIO_FROM_CEP || '06110-000'),
   }

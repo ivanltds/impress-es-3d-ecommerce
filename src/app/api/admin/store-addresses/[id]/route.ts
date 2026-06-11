@@ -20,7 +20,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (complement !== undefined) data.complement = complement
     if (neighborhood !== undefined) data.neighborhood = neighborhood
     if (city !== undefined) data.city = city
-    if (state !== undefined) data.state = state
+    if (state !== undefined) data.state = String(state).toUpperCase()
     if (cep !== undefined) data.cep = cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
     if (isActive !== undefined) data.isActive = isActive
     const address = await prisma.storeAddress.update({ where: { id }, data })

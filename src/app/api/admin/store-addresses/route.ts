@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         street, number,
         complement:   complement   || null,
         neighborhood: neighborhood || null,
-        city, state,
+        city, state: String(state).toUpperCase(),
         cep: formatted,
         isActive: isActive ?? true,
       },
