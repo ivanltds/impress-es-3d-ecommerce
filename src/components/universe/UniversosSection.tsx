@@ -134,31 +134,26 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   onClick={() => setActiveSlug(u.slug)}
                   className="flex-shrink-0 relative overflow-hidden focus:outline-none select-none"
                   animate={{ scale: isActive ? 1.05 : 1 }}
-                  transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                  transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
                   style={{
                     width: '148px',
                     height: '186px',
                     borderRadius: '20px',
-                    background: '#0e0e0e',
-                    border: isActive
-                      ? '2px solid ' + accent
-                      : '1.5px solid rgba(255,255,255,0.08)',
-                    boxShadow: isActive
-                      ? '0 0 32px ' + accent + '55, inset 0 1px 0 rgba(255,255,255,0.08)'
-                      : 'none',
+                    background: '#0d0d0d',
+                    border: '1.5px solid rgba(255,255,255,0.08)',
                     cursor: 'pointer',
-                    transition: 'border 0.25s ease, box-shadow 0.25s ease',
                   }}
                 >
-                  {/* Fundo colorido que sobe do bottom — animação principal */}
+                  {/* Gradiente cobre o card inteiro; clipPath revela de baixo pra cima — sem seam */}
                   <motion.div
-                    className="absolute inset-x-0 bottom-0 pointer-events-none"
-                    animate={{ height: isActive ? '100%' : '44%' }}
-                    transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
-                    style={{
-                      background: det?.bgGradient ?? accent + '33',
-                      borderRadius: '20px',
+                    className="absolute inset-0 pointer-events-none"
+                    animate={{
+                      clipPath: isActive
+                        ? 'inset(0% 0% 0% 0% round 20px)'
+                        : 'inset(54% 0% 0% 0% round 20px)',
                     }}
+                    transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+                    style={{ background: det?.bgGradient ?? accent + '44' }}
                   />
 
                   {/* Imagem (blob) ou fallback decorativo — dados dinâmicos do admin */}
@@ -172,7 +167,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                         alt={cfg?.name ?? u.name}
                         data-testid={`card-universe-image-${u.slug}`}
                         className="object-contain drop-shadow-2xl"
-                        style={{ width: '108px', height: '116px' }}
+                        style={{ width: '128px', height: '136px' }}
                       />
                     ) : (
                       /* Fallback visual: monograma com glow — sem hardcode */
