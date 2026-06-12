@@ -111,61 +111,121 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
           </p>
         </div>
 
-        {/* Row de pill cards */}
+        {/* Row de cards estilo Meshy — scroll horizontal, dinâmico */}
         <div
-          data-testid="universos-carousel-dots"
-          className="flex gap-3 overflow-x-auto pb-2 justify-center flex-wrap md:flex-nowrap"
-          style={{ scrollbarWidth: 'none' }}
+          className="overflow-x-auto pb-3"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {sorted.map((u) => {
-            const cfg = UNIVERSE_CONFIG[u.slug]
-            const det = UNIVERSE_DETAILS[u.slug]
-            const isActive = u.slug === activeSlug
-            return (
-              <button
-                key={u.slug}
-                data-testid={'universo-card-' + u.slug}
-                onClick={() => setActiveSlug(u.slug)}
-                className="flex-shrink-0 px-5 py-3 rounded-2xl font-semibold text-sm relative"
-                style={{
-                  background: isActive ? det?.bgGradient : 'rgba(255,255,255,0.05)',
-                  border: isActive ? '1.5px solid ' + det?.accent : '1.5px solid rgba(255,255,255,0.1)',
-                  color: isActive ? det?.accent : 'rgba(255,255,255,0.5)',
-                  boxShadow: isActive ? '0 0 20px ' + det?.accent + '30' : 'none',
-                  transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                }}
-              >
-                {u.comingSoon && (
-                  <span
-                    data-testid="universo-badge-coming-soon"
-                    className="absolute -top-1.5 -right-1.5 text-[9px] px-1.5 py-0.5 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)' }}
+          <div
+            data-testid="universos-carousel-dots"
+            className="flex gap-3 mx-auto"
+            style={{ width: 'fit-content', minWidth: '100%', justifyContent: 'center' }}
+          >
+            {sorted.map((u) => {
+              const cfg = UNIVERSE_CONFIG[u.slug]
+              const det = UNIVERSE_DETAILS[u.slug]
+              const isActive = u.slug === activeSlug
+              const accent = det?.accent ?? '#6366f1'
+
+              return (
+                <button
+                  key={u.slug}
+                  data-testid={'universo-card-' + u.slug}
+                  onClick={() => setActiveSlug(u.slug)}
+                  className="flex-shrink-0 relative overflow-hidden focus:outline-none select-none"
+                  style={{
+                    width: '148px',
+                    height: '186px',
+                    borderRadius: '20px',
+                    background: det?.bgGradient ?? 'rgba(255,255,255,0.04)',
+                    border: isActive
+                      ? '2px solid ' + accent
+                      : '1.5px solid rgba(255,255,255,0.08)',
+                    boxShadow: isActive
+                      ? '0 0 32px ' + accent + '55, inset 0 1px 0 rgba(255,255,255,0.08)'
+                      : 'none',
+                    transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {/* Escurece cards inativos sem apagar o gradiente */}
+                  {!isActive && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'rgba(0,0,0,0.52)', zIndex: 1, borderRadius: 'inherit' }}
+                    />
+                  )}
+
+                  {/* Imagem (blob) ou fallback decorativo — dados dinâmicos do admin */}
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ paddingBottom: '44px', zIndex: 2 }}
                   >
-                    Em breve
-                  </span>
-                )}
-                {u.slug === preferredSlug && isActive && (
-                  <span
-                    className="absolute -top-1.5 -left-1.5 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                    style={{ background: det?.accent, color: '#000' }}
+                    {u.cardImageUrl ? (
+                      <img
+                        src={u.cardImageUrl}
+                        alt={cfg?.name ?? u.name}
+                        data-testid={`card-universe-image-${u.slug}`}
+                        className="object-contain drop-shadow-2xl"
+                        style={{ width: '108px', height: '116px' }}
+                      />
+                    ) : (
+                      /* Fallback visual: monograma com glow — sem hardcode */
+                      <span
+                        className="text-5xl font-black tracking-tighter"
+                        style={{ color: accent, opacity: isActive ? 0.55 : 0.18 }}
+                      >
+                        {(cfg?.name ?? u.name).slice(0, 2)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Label inferior com overlay escuro */}
+                  <div
+                    className="absolute bottom-0 inset-x-0 px-3 py-2.5 text-center"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%)',
+                      zIndex: 3,
+                    }}
                   >
-                    Seu universo
-                  </span>
-                )}
-                {u.cardImageUrl ? (
-                  <img
-                    src={u.cardImageUrl}
-                    alt={u.name}
-                    data-testid={`card-universe-image-${u.slug}`}
-                    className="w-8 h-8 object-contain inline-block mr-1 align-middle"
-                  />
-                ) : null}
-                {cfg?.name ?? u.name}
-              </button>
-            )
-          })}
+                    <span
+                      className="text-xs font-bold tracking-wide truncate block"
+                      style={{ color: isActive ? accent : 'rgba(255,255,255,0.65)' }}
+                    >
+                      {cfg?.name ?? u.name}
+                    </span>
+                  </div>
+
+                  {/* Badge "Em breve" — vem do campo comingSoon do banco */}
+                  {u.comingSoon && (
+                    <span
+                      data-testid="universo-badge-coming-soon"
+                      className="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                      style={{
+                        background: 'rgba(255,255,255,0.14)',
+                        color: 'rgba(255,255,255,0.65)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 4,
+                      }}
+                    >
+                      Em breve
+                    </span>
+                  )}
+
+                  {/* Badge "Seu universo" — baseado no preferredSlug do usuário */}
+                  {u.slug === preferredSlug && isActive && (
+                    <span
+                      className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                      style={{ background: accent, color: '#000', zIndex: 4 }}
+                    >
+                      Seu universo
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Painel de conteudo com AnimatePresence */}
