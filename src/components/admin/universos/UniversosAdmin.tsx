@@ -1,6 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { getUniverseTagline, getUniverseBullets } from '@/lib/universe-utils'
+
+// Accent colors per universe for the card header strip
+const ACCENT: Record<string, string> = {
+  gaming: '#4ade80',
+  'anime-nerd': '#c084fc',
+  'casa-decor': '#fbbf24',
+  presentes: '#f97316',
+  auto: '#ef4444',
+}
 
 interface UniverseRow {
   id: string
@@ -34,29 +44,43 @@ interface ErrorState {
   heroImage?: string
 }
 
-function StatusIcon({ filled }: { filled: boolean }) {
+function StatusBadge({
+  label,
+  filled,
+  testId,
+}: {
+  label: string
+  filled: boolean
+  testId: string
+}) {
   return (
     <span
-      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+      data-testid={testId}
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
       style={{
         background: filled ? '#16a34a20' : '#64748b20',
         color: filled ? '#16a34a' : '#64748b',
-        border: `1px solid ${filled ? '#16a34a40' : '#64748b40'}`,
+        border: '1px solid ' + (filled ? '#16a34a40' : '#64748b40'),
       }}
     >
-      {filled ? 'S' : 'N'}
+      <span
+        className="inline-block w-1.5 h-1.5 rounded-full"
+        style={{ background: filled ? '#16a34a' : '#64748b' }}
+      />
+      {label}
     </span>
   )
 }
 
-function UniversoRowItem({
+function UniversoCard({
   universe,
   onToast,
 }: {
   universe: UniverseRow
   onToast: (msg: string) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const accent = ACCENT[universe.slug] ?? '#6366f1'
+
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(universe.cardImageUrl)
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(universe.heroImageUrl)
   const [saving, setSaving] = useState(false)
@@ -64,12 +88,8 @@ function UniversoRowItem({
   const [uploadingHero, setUploadingHero] = useState(false)
 
   const [form, setForm] = useState<FormState>({
-    tagline: universe.tagline ?? '',
-    bullets: [
-      universe.bullets[0] ?? '',
-      universe.bullets[1] ?? '',
-      universe.bullets[2] ?? '',
-    ],
+    tagline: getUniverseTagline(universe.tagline, universe.slug),
+    bullets: getUniverseBullets(universe.bullets, universe.slug) as [string, string, string],
     cardFile: null,
     heroFile: null,
   })
@@ -82,26 +102,26 @@ function UniversoRowItem({
   function validateText(): ErrorState {
     const errs: ErrorState = {}
     if (!form.tagline.trim()) {
-      errs.tagline = 'A tagline não pode ser vazia'
+      errs.tagline = 'A tagline nao pode ser vazia'
     } else if (form.tagline.length > 120) {
-      errs.tagline = 'Máximo de 120 caracteres'
+      errs.tagline = 'Maximo de 120 caracteres'
     }
     for (let i = 0; i < 3; i++) {
       const b = form.bullets[i]
       if (b.length < 5) {
-        (errs as any)[`bullet${i}`] = 'Mínimo de 5 caracteres por bullet'
+        ;(errs as Record<string, string>)['bullet' + i] = 'Minimo de 5 caracteres por bullet'
       } else if (b.length > 100) {
-        (errs as any)[`bullet${i}`] = 'Máximo de 100 caracteres por bullet'
+        ;(errs as Record<string, string>)['bullet' + i] = 'Maximo de 100 caracteres por bullet'
       }
     }
     return errs
   }
 
   const hasTextErrors = Boolean(
-    (!form.tagline.trim()) ||
-    form.tagline.length > 120 ||
-    form.bullets.some((b) => b.length > 100) ||
-    form.bullets.some((b) => b.length < 5)
+    !form.tagline.trim() ||
+      form.tagline.length > 120 ||
+      form.bullets.some((b) => b.length > 100) ||
+      form.bullets.some((b) => b.length < 5)
   )
 
   async function handleSaveText() {
@@ -113,7 +133,7 @@ function UniversoRowItem({
     setErrors({})
     setSaving(true)
     try {
-      const res = await fetch(`/api/admin/universes/${universe.slug}`, {
+      const res = await fetch('/api/admin/universes/' + universe.slug, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tagline: form.tagline, bullets: form.bullets }),
@@ -123,7 +143,7 @@ function UniversoRowItem({
         setErrors({ tagline: body.error })
         return
       }
-      onToast('Conteúdo atualizado com sucesso')
+      onToast('Conteudo atualizado com sucesso')
     } finally {
       setSaving(false)
     }
@@ -133,11 +153,11 @@ function UniversoRowItem({
     if (!form.cardFile) return
     const file = form.cardFile
     if (file.type !== 'image/png') {
-      setErrors((e) => ({ ...e, cardImage: 'Apenas PNG é aceito (transparência obrigatória)' }))
+      setErrors((e) => ({ ...e, cardImage: 'Apenas PNG e aceito (transparencia obrigatoria)' }))
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors((e) => ({ ...e, cardImage: 'Arquivo muito grande. Máximo permitido: 5 MB' }))
+      setErrors((e) => ({ ...e, cardImage: 'Arquivo muito grande. Maximo permitido: 5 MB' }))
       return
     }
     setErrors((e) => ({ ...e, cardImage: undefined }))
@@ -146,7 +166,7 @@ function UniversoRowItem({
       const fd = new FormData()
       fd.append('file', file)
       fd.append('type', 'card')
-      const res = await fetch(`/api/admin/universes/${universe.slug}/upload`, {
+      const res = await fetch('/api/admin/universes/' + universe.slug + '/upload', {
         method: 'POST',
         body: fd,
       })
@@ -167,11 +187,11 @@ function UniversoRowItem({
     if (!form.heroFile) return
     const file = form.heroFile
     if (file.type !== 'image/png') {
-      setErrors((e) => ({ ...e, heroImage: 'Apenas PNG é aceito (transparência obrigatória)' }))
+      setErrors((e) => ({ ...e, heroImage: 'Apenas PNG e aceito (transparencia obrigatoria)' }))
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors((e) => ({ ...e, heroImage: 'Arquivo muito grande. Máximo permitido: 5 MB' }))
+      setErrors((e) => ({ ...e, heroImage: 'Arquivo muito grande. Maximo permitido: 5 MB' }))
       return
     }
     setErrors((e) => ({ ...e, heroImage: undefined }))
@@ -180,7 +200,7 @@ function UniversoRowItem({
       const fd = new FormData()
       fd.append('file', file)
       fd.append('type', 'hero')
-      const res = await fetch(`/api/admin/universes/${universe.slug}/upload`, {
+      const res = await fetch('/api/admin/universes/' + universe.slug + '/upload', {
         method: 'POST',
         body: fd,
       })
@@ -199,154 +219,74 @@ function UniversoRowItem({
 
   return (
     <div
-      data-testid={`universo-row-${universe.slug}`}
-      className="rounded-xl border bg-card"
-      style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+      data-testid={'universo-row-' + universe.slug}
+      className="rounded-2xl border overflow-hidden bg-card"
+      style={{ borderColor: accent + '30' }}
     >
-      {/* Row header */}
-      <div className="flex items-center gap-4 px-4 py-3">
-        <div className="flex-1">
-          <span className="font-semibold text-sm">{universe.name}</span>
+      {/* Card header with universe accent color */}
+      <div
+        className="px-5 py-3 flex items-center justify-between"
+        style={{
+          background: accent + '14',
+          borderBottom: '1px solid ' + accent + '30',
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            style={{ background: accent }}
+          />
+          <span className="font-bold text-base">{universe.name}</span>
           {universe.comingSoon && (
-            <span className="ml-2 text-xs text-muted-foreground">(Em breve)</span>
+            <span className="text-xs text-muted-foreground">(Em breve)</span>
           )}
         </div>
 
-        {/* Status indicators */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <span data-testid={`status-card-image-${universe.slug}`}>
-              <StatusIcon filled={!!cardImageUrl} />
-            </span>
-            Card
-          </span>
-          <span className="flex items-center gap-1">
-            <span data-testid={`status-hero-image-${universe.slug}`}>
-              <StatusIcon filled={!!heroImageUrl} />
-            </span>
-            Hero
-          </span>
-          <span className="flex items-center gap-1">
-            <span data-testid={`status-tagline-${universe.slug}`}>
-              <StatusIcon filled={!!universe.tagline} />
-            </span>
-            Tagline
-          </span>
+        {/* Status badges */}
+        <div className="flex gap-2 flex-wrap justify-end">
+          <StatusBadge
+            label="Card"
+            filled={!!cardImageUrl}
+            testId={'status-card-image-' + universe.slug}
+          />
+          <StatusBadge
+            label="Hero"
+            filled={!!heroImageUrl}
+            testId={'status-hero-image-' + universe.slug}
+          />
+          <StatusBadge
+            label="Tagline"
+            filled={!!universe.tagline}
+            testId={'status-tagline-' + universe.slug}
+          />
         </div>
-
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-          style={{
-            background: open ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)',
-            color: open ? '#818cf8' : '#94a3b8',
-          }}
-        >
-          {open ? 'Fechar' : 'Editar'}
-        </button>
       </div>
 
-      {/* Edit panel */}
-      {open && (
-        <div
-          className="px-4 pb-4 pt-2 border-t space-y-5"
-          style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-        >
-          {/* Text fields */}
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                Tagline
-              </label>
-              <input
-                data-testid="input-tagline"
-                type="text"
-                value={form.tagline}
-                onChange={(e) => {
-                  setForm((f) => ({ ...f, tagline: e.target.value }))
-                  if (errors.tagline) setErrors((er) => ({ ...er, tagline: undefined }))
-                }}
-                maxLength={130}
-                className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                style={{ borderColor: errors.tagline ? '#ef4444' : 'rgba(255,255,255,0.12)' }}
-                placeholder="Ex: Setup com atitude."
-              />
-              {errors.tagline && (
-                <p data-testid="error-tagline" className="text-xs text-red-400 mt-1">
-                  {errors.tagline}
-                </p>
-              )}
-            </div>
-
-            {([0, 1, 2] as const).map((i) => (
-              <div key={i}>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                  Bullet {i + 1}
-                </label>
-                <input
-                  data-testid={`input-bullet-${i}`}
-                  type="text"
-                  value={form.bullets[i]}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    setForm((f) => {
-                      const b = [...f.bullets] as [string, string, string]
-                      b[i] = val
-                      return { ...f, bullets: b }
-                    })
-                    if ((errors as any)[`bullet${i}`]) {
-                      setErrors((er) => ({ ...er, [`bullet${i}`]: undefined }))
-                    }
-                  }}
-                  maxLength={110}
-                  className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  style={{
-                    borderColor: (errors as any)[`bullet${i}`]
-                      ? '#ef4444'
-                      : 'rgba(255,255,255,0.12)',
-                  }}
-                />
-                {(errors as any)[`bullet${i}`] && (
-                  <p data-testid={`error-bullet-${i}`} className="text-xs text-red-400 mt-1">
-                    {(errors as any)[`bullet${i}`]}
-                  </p>
-                )}
-              </div>
-            ))}
-
-            <button
-              data-testid="btn-save-text"
-              onClick={handleSaveText}
-              disabled={saving || hasTextErrors}
-              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: '#6366f1', color: '#fff' }}
-            >
-              {saving ? 'Salvando...' : 'Salvar texto'}
-            </button>
-          </div>
-
+      {/* Card body: 2-column grid on md+ */}
+      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left column: image uploads */}
+        <div className="space-y-5">
           {/* Card image upload */}
-          <div
-            className="pt-3 border-t space-y-2"
-            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-          >
-            <p className="text-xs font-medium text-muted-foreground">Imagem do card (PNG)</p>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Imagem do card (PNG)
+            </p>
             {cardImageUrl && (
               <img
                 data-testid="preview-card-image"
                 src={cardImageUrl}
                 alt={universe.name}
-                className="w-16 h-16 object-contain rounded border"
+                className="w-16 h-16 object-contain rounded-lg border"
                 style={{ borderColor: 'rgba(255,255,255,0.1)' }}
               />
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input
                 data-testid="input-card-image"
                 ref={cardInputRef}
                 type="file"
                 accept="image/png"
-                className="text-xs"
+                className="text-xs flex-1 min-w-0"
                 onChange={(e) => {
                   const f = e.target.files?.[0] ?? null
                   setForm((prev) => ({ ...prev, cardFile: f }))
@@ -357,7 +297,7 @@ function UniversoRowItem({
                 data-testid="btn-upload-card"
                 onClick={handleUploadCard}
                 disabled={uploadingCard || !form.cardFile}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
                 style={{ background: '#475569', color: '#fff' }}
               >
                 {uploadingCard ? 'Enviando...' : 'Enviar'}
@@ -371,27 +311,26 @@ function UniversoRowItem({
           </div>
 
           {/* Hero image upload */}
-          <div
-            className="pt-3 border-t space-y-2"
-            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-          >
-            <p className="text-xs font-medium text-muted-foreground">Imagem hero (PNG)</p>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Imagem hero (PNG)
+            </p>
             {heroImageUrl && (
               <img
                 data-testid="preview-hero-image"
                 src={heroImageUrl}
                 alt={universe.name}
-                className="w-24 h-16 object-contain rounded border"
+                className="w-24 h-16 object-contain rounded-lg border"
                 style={{ borderColor: 'rgba(255,255,255,0.1)' }}
               />
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input
                 data-testid="input-hero-image"
                 ref={heroInputRef}
                 type="file"
                 accept="image/png"
-                className="text-xs"
+                className="text-xs flex-1 min-w-0"
                 onChange={(e) => {
                   const f = e.target.files?.[0] ?? null
                   setForm((prev) => ({ ...prev, heroFile: f }))
@@ -402,7 +341,7 @@ function UniversoRowItem({
                 data-testid="btn-upload-hero"
                 onClick={handleUploadHero}
                 disabled={uploadingHero || !form.heroFile}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
                 style={{ background: '#475569', color: '#fff' }}
               >
                 {uploadingHero ? 'Enviando...' : 'Enviar'}
@@ -415,7 +354,82 @@ function UniversoRowItem({
             )}
           </div>
         </div>
-      )}
+
+        {/* Right column: text fields */}
+        <div className="space-y-3">
+          {/* Tagline */}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
+              Tagline
+            </label>
+            <input
+              data-testid="input-tagline"
+              type="text"
+              value={form.tagline}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, tagline: e.target.value }))
+                if (errors.tagline) setErrors((er) => ({ ...er, tagline: undefined }))
+              }}
+              maxLength={130}
+              className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              style={{ borderColor: errors.tagline ? '#ef4444' : 'rgba(255,255,255,0.12)' }}
+              placeholder="Ex: Setup com atitude."
+            />
+            {errors.tagline && (
+              <p data-testid="error-tagline" className="text-xs text-red-400 mt-1">
+                {errors.tagline}
+              </p>
+            )}
+          </div>
+
+          {/* Bullets */}
+          {([0, 1, 2] as const).map((i) => (
+            <div key={i}>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
+                Bullet {i + 1}
+              </label>
+              <input
+                data-testid={'input-bullet-' + i}
+                type="text"
+                value={form.bullets[i]}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setForm((f) => {
+                    const b = [...f.bullets] as [string, string, string]
+                    b[i] = val
+                    return { ...f, bullets: b }
+                  })
+                  if ((errors as Record<string, string | undefined>)['bullet' + i]) {
+                    setErrors((er) => ({ ...er, ['bullet' + i]: undefined }))
+                  }
+                }}
+                maxLength={110}
+                className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                style={{
+                  borderColor: (errors as Record<string, string | undefined>)['bullet' + i]
+                    ? '#ef4444'
+                    : 'rgba(255,255,255,0.12)',
+                }}
+              />
+              {(errors as Record<string, string | undefined>)['bullet' + i] && (
+                <p data-testid={'error-bullet-' + i} className="text-xs text-red-400 mt-1">
+                  {(errors as Record<string, string | undefined>)['bullet' + i]}
+                </p>
+              )}
+            </div>
+          ))}
+
+          <button
+            data-testid="btn-save-text"
+            onClick={handleSaveText}
+            disabled={saving || hasTextErrors}
+            className="w-full px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: '#6366f1', color: '#fff' }}
+          >
+            {saving ? 'Salvando...' : 'Salvar texto'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -448,9 +462,9 @@ export function UniversosAdmin({ universes }: Props) {
         </div>
       )}
 
-      <div data-testid="admin-universos-list" className="space-y-3">
+      <div data-testid="admin-universos-list" className="space-y-4">
         {universes.map((u) => (
-          <UniversoRowItem key={u.slug} universe={u} onToast={showToast} />
+          <UniversoCard key={u.slug} universe={u} onToast={showToast} />
         ))}
       </div>
     </div>
