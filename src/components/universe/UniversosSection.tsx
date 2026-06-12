@@ -78,6 +78,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
   const sorted = sortUniversesByPreference(universes, preferredSlug)
   const initialSlug = sorted[0]?.slug ?? 'gaming'
   const [activeSlug, setActiveSlug] = useState<string>(initialSlug)
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null)
 
   const activeUniverse = sorted.find((u) => u.slug === activeSlug)
   const activeConfig = UNIVERSE_CONFIG[activeSlug]
@@ -111,7 +112,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
           </p>
         </div>
 
-        {/* Row de cards estilo Meshy — scroll horizontal, dinâmico */}
+        {/* Row de cards estilo Meshy */}
         <div
           className="overflow-x-auto pb-3"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -125,6 +126,8 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
               const cfg = UNIVERSE_CONFIG[u.slug]
               const det = UNIVERSE_DETAILS[u.slug]
               const isActive = u.slug === activeSlug
+              const isHovered = hoveredSlug === u.slug
+              const isRisen = isActive || isHovered
               const accent = det?.accent ?? '#6366f1'
 
               return (
@@ -132,55 +135,60 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   key={u.slug}
                   data-testid={'universo-card-' + u.slug}
                   onClick={() => setActiveSlug(u.slug)}
+                  onMouseEnter={() => setHoveredSlug(u.slug)}
+                  onMouseLeave={() => setHoveredSlug(null)}
                   className="flex-shrink-0 relative overflow-hidden focus:outline-none select-none"
                   animate={{ scale: isActive ? 1.05 : 1 }}
                   transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
                   style={{
-                    width: '148px',
-                    height: '186px',
+                    width: '160px',
+                    height: '204px',
                     borderRadius: '20px',
                     background: '#0d0d0d',
                     border: '1.5px solid rgba(255,255,255,0.08)',
                     cursor: 'pointer',
                   }}
                 >
-                  {/* Gradiente cobre o card inteiro; clipPath revela de baixo pra cima — sem seam */}
+                  {/* Gradiente ocupa o card inteiro; clipPath revela de baixo pra cima sem seam */}
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     animate={{
-                      clipPath: isActive
+                      clipPath: isRisen
                         ? 'inset(0% 0% 0% 0% round 20px)'
-                        : 'inset(54% 0% 0% 0% round 20px)',
+                        : 'inset(52% 0% 0% 0% round 20px)',
                     }}
-                    transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+                    transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
                     style={{ background: det?.bgGradient ?? accent + '44' }}
                   />
 
-                  {/* Imagem (blob) ou fallback decorativo — dados dinâmicos do admin */}
+                  {/* Imagem do blob (PNG transparente) ou fallback — dados dinamicos do admin */}
                   <div
                     className="absolute inset-0 flex items-center justify-center"
-                    style={{ paddingBottom: '44px', zIndex: 2 }}
+                    style={{ paddingBottom: '48px', zIndex: 2 }}
                   >
                     {u.cardImageUrl ? (
-                      <img
+                      <motion.img
                         src={u.cardImageUrl}
                         alt={cfg?.name ?? u.name}
                         data-testid={`card-universe-image-${u.slug}`}
                         className="object-contain drop-shadow-2xl"
-                        style={{ width: '128px', height: '136px' }}
+                        animate={{ scale: isRisen ? 1.1 : 1 }}
+                        transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                        style={{ width: '148px', height: '152px' }}
                       />
                     ) : (
-                      /* Fallback visual: monograma com glow — sem hardcode */
-                      <span
+                      <motion.span
                         className="text-5xl font-black tracking-tighter"
-                        style={{ color: accent, opacity: isActive ? 0.55 : 0.18 }}
+                        animate={{ scale: isRisen ? 1.1 : 1 }}
+                        transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                        style={{ color: accent, opacity: isRisen ? 0.6 : 0.18 }}
                       >
                         {(cfg?.name ?? u.name).slice(0, 2)}
-                      </span>
+                      </motion.span>
                     )}
                   </div>
 
-                  {/* Label inferior com overlay escuro */}
+                  {/* Label inferior com overlay — titulo sobrepoe a imagem */}
                   <div
                     className="absolute bottom-0 inset-x-0 px-3 py-2.5 text-center"
                     style={{
@@ -190,7 +198,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   >
                     <span
                       className="text-xs font-bold tracking-wide truncate block"
-                      style={{ color: isActive ? accent : 'rgba(255,255,255,0.65)' }}
+                      style={{ color: isRisen ? accent : 'rgba(255,255,255,0.65)' }}
                     >
                       {cfg?.name ?? u.name}
                     </span>
@@ -212,7 +220,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                     </span>
                   )}
 
-                  {/* Badge "Seu universo" — baseado no preferredSlug do usuário */}
+                  {/* Badge "Seu universo" — baseado no preferredSlug do usuario */}
                   {u.slug === preferredSlug && isActive && (
                     <span
                       className="absolute top-2 left-2 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
@@ -297,7 +305,6 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
               }}
             >
               {activeUniverse?.heroImageUrl ? (
-                /* FF08: imagem hero do banco sobrepoe o visual decorativo */
                 <img
                   src={activeUniverse.heroImageUrl}
                   alt={activeUniverse.name}
@@ -305,9 +312,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   className="w-full h-full object-contain max-h-64"
                 />
               ) : (
-                /* Fallback: visual decorativo (grid + glow) */
                 <>
-                  {/* Grid pattern */}
                   <div
                     className="absolute inset-0 opacity-10"
                     style={{
@@ -316,14 +321,12 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                       backgroundSize: '40px 40px',
                     }}
                   />
-                  {/* Glow central */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div
                       className="w-40 h-40 rounded-full blur-3xl"
                       style={{ background: (details?.accent ?? '#fff') + '20' }}
                     />
                   </div>
-                  {/* Nome grande */}
                   <div className="relative z-10 text-center px-8">
                     <div
                       className="text-7xl font-black opacity-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
