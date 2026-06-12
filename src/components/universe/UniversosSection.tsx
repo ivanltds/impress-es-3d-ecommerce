@@ -128,34 +128,38 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
               const accent = det?.accent ?? '#6366f1'
 
               return (
-                <button
+                <motion.button
                   key={u.slug}
                   data-testid={'universo-card-' + u.slug}
                   onClick={() => setActiveSlug(u.slug)}
                   className="flex-shrink-0 relative overflow-hidden focus:outline-none select-none"
+                  animate={{ scale: isActive ? 1.05 : 1 }}
+                  transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
                   style={{
                     width: '148px',
                     height: '186px',
                     borderRadius: '20px',
-                    background: det?.bgGradient ?? 'rgba(255,255,255,0.04)',
+                    background: '#0e0e0e',
                     border: isActive
                       ? '2px solid ' + accent
                       : '1.5px solid rgba(255,255,255,0.08)',
                     boxShadow: isActive
                       ? '0 0 32px ' + accent + '55, inset 0 1px 0 rgba(255,255,255,0.08)'
                       : 'none',
-                    transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                    transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
                     cursor: 'pointer',
+                    transition: 'border 0.25s ease, box-shadow 0.25s ease',
                   }}
                 >
-                  {/* Escurece cards inativos sem apagar o gradiente */}
-                  {!isActive && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'rgba(0,0,0,0.52)', zIndex: 1, borderRadius: 'inherit' }}
-                    />
-                  )}
+                  {/* Fundo colorido que sobe do bottom — animação principal */}
+                  <motion.div
+                    className="absolute inset-x-0 bottom-0 pointer-events-none"
+                    animate={{ height: isActive ? '100%' : '44%' }}
+                    transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+                    style={{
+                      background: det?.bgGradient ?? accent + '33',
+                      borderRadius: '20px',
+                    }}
+                  />
 
                   {/* Imagem (blob) ou fallback decorativo — dados dinâmicos do admin */}
                   <div
@@ -222,7 +226,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                       Seu universo
                     </span>
                   )}
-                </button>
+                </motion.button>
               )
             })}
           </div>
