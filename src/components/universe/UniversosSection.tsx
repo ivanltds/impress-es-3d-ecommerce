@@ -83,7 +83,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
           <div
             data-testid="universos-carousel-dots"
             className="flex gap-4 mx-auto"
-            style={{ width: 'fit-content', minWidth: '100%', justifyContent: 'center', paddingTop: '20px' }}
+            style={{ width: 'fit-content', minWidth: '100%', justifyContent: 'center', paddingTop: '4px' }}
           >
             {sorted.map((u) => {
               const cfg = UNIVERSE_CONFIG[u.slug]
@@ -103,7 +103,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   className="flex-shrink-0 relative focus:outline-none select-none"
                   animate={{ scale: isActive ? 1.05 : 1 }}
                   transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-                  style={{ width: '160px', height: '204px', borderRadius: '20px', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  style={{ width: '200px', height: '260px', borderRadius: '20px', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
                   {/* Container do gradiente com overflow hidden isolado */}
                   <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: '20px' }}>
@@ -130,7 +130,7 @@ export function UniversosSection({ universes, preferredSlug }: Props) {
                   {/* Imagem vaza acima do card — sem overflow hidden aqui */}
                   <div
                     className="absolute inset-x-0 pointer-events-none"
-                    style={{ top: '-20px', bottom: '44px', zIndex: 10 }}
+                    style={{ top: '4px', bottom: '48px', zIndex: 10 }}
                   >
                     {u.cardImageUrl ? (
                       <motion.img
