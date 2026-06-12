@@ -12,7 +12,7 @@ import { DestaquesSection } from '@/components/universe/DestaquesSection'
 import { ProvaSocialSection } from '@/components/universe/ProvaSocialSection'
 import { WhatsAppCTA } from '@/components/universe/WhatsAppCTA'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const cookieStore = await cookies()
