@@ -1,5 +1,6 @@
 // M04+M05: Single Product API
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           (Array.isArray(customizationSchema) && customizationSchema.length > 0),
         estimatedProductionTime: estimatedHours || 2,
         images: images || [],
-        customizationSchema: customizationSchema || null,
+        customizationSchema: customizationSchema ?? Prisma.DbNull,
       },
     })
   } catch (err) {
