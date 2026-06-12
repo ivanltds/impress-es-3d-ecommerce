@@ -56,16 +56,17 @@ function StatusBadge({
   return (
     <span
       data-testid={testId}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{
-        background: filled ? '#16a34a20' : '#64748b20',
-        color: filled ? '#16a34a' : '#64748b',
-        border: '1px solid ' + (filled ? '#16a34a40' : '#64748b40'),
-      }}
+      className={
+        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ' +
+        (filled
+          ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+          : 'bg-slate-100 text-slate-500 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600')
+      }
     >
       <span
-        className="inline-block w-1.5 h-1.5 rounded-full"
-        style={{ background: filled ? '#16a34a' : '#64748b' }}
+        className={
+          'inline-block w-1.5 h-1.5 rounded-full ' + (filled ? 'bg-green-500' : 'bg-slate-400')
+        }
       />
       {label}
     </span>
@@ -220,16 +221,11 @@ function UniversoCard({
   return (
     <div
       data-testid={'universo-row-' + universe.slug}
-      className="rounded-2xl border overflow-hidden bg-card"
-      style={{ borderColor: accent + '30' }}
+      className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm"
     >
       {/* Card header with universe accent color */}
       <div
-        className="px-5 py-3 flex items-center justify-between"
-        style={{
-          background: accent + '14',
-          borderBottom: '1px solid ' + accent + '30',
-        }}
+        className="px-5 py-3 flex items-center justify-between border-b border-border bg-muted/60"
       >
         <div className="flex items-center gap-3">
           <span
@@ -271,40 +267,50 @@ function UniversoCard({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Imagem do card (PNG)
             </p>
-            {cardImageUrl && (
+            {cardImageUrl ? (
               <img
                 data-testid="preview-card-image"
                 src={cardImageUrl}
                 alt={universe.name}
-                className="w-16 h-16 object-contain rounded-lg border"
-                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                className="w-16 h-16 object-contain rounded-lg border border-border"
               />
+            ) : (
+              <div className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-[10px] text-center leading-tight">
+                sem<br />imagem
+              </div>
             )}
-            <div className="flex items-center gap-2 flex-wrap">
-              <input
-                data-testid="input-card-image"
-                ref={cardInputRef}
-                type="file"
-                accept="image/png"
-                className="text-xs flex-1 min-w-0"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null
-                  setForm((prev) => ({ ...prev, cardFile: f }))
-                  setErrors((er) => ({ ...er, cardImage: undefined }))
-                }}
-              />
+            {/* Hidden native input, triggered by label */}
+            <input
+              data-testid="input-card-image"
+              ref={cardInputRef}
+              id={'card-file-' + universe.slug}
+              type="file"
+              accept="image/png"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null
+                setForm((prev) => ({ ...prev, cardFile: f }))
+                setErrors((er) => ({ ...er, cardImage: undefined }))
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor={'card-file-' + universe.slug}
+                className="flex-1 cursor-pointer rounded-lg border border-border bg-muted hover:bg-muted/80 px-3 py-1.5 text-xs font-medium text-foreground transition-colors truncate"
+              >
+                {form.cardFile ? form.cardFile.name : 'Escolher PNG…'}
+              </label>
               <button
                 data-testid="btn-upload-card"
                 onClick={handleUploadCard}
                 disabled={uploadingCard || !form.cardFile}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
-                style={{ background: '#475569', color: '#fff' }}
+                className="flex-shrink-0 rounded-lg bg-slate-700 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {uploadingCard ? 'Enviando...' : 'Enviar'}
+                {uploadingCard ? 'Enviando…' : 'Enviar'}
               </button>
             </div>
             {errors.cardImage && (
-              <p data-testid="error-card-image" className="text-xs text-red-400">
+              <p data-testid="error-card-image" className="text-xs text-red-500">
                 {errors.cardImage}
               </p>
             )}
@@ -315,40 +321,49 @@ function UniversoCard({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Imagem hero (PNG)
             </p>
-            {heroImageUrl && (
+            {heroImageUrl ? (
               <img
                 data-testid="preview-hero-image"
                 src={heroImageUrl}
                 alt={universe.name}
-                className="w-24 h-16 object-contain rounded-lg border"
-                style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                className="w-24 h-16 object-contain rounded-lg border border-border"
               />
+            ) : (
+              <div className="w-24 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-[10px] text-center leading-tight">
+                sem<br />imagem
+              </div>
             )}
-            <div className="flex items-center gap-2 flex-wrap">
-              <input
-                data-testid="input-hero-image"
-                ref={heroInputRef}
-                type="file"
-                accept="image/png"
-                className="text-xs flex-1 min-w-0"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null
-                  setForm((prev) => ({ ...prev, heroFile: f }))
-                  setErrors((er) => ({ ...er, heroImage: undefined }))
-                }}
-              />
+            <input
+              data-testid="input-hero-image"
+              ref={heroInputRef}
+              id={'hero-file-' + universe.slug}
+              type="file"
+              accept="image/png"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null
+                setForm((prev) => ({ ...prev, heroFile: f }))
+                setErrors((er) => ({ ...er, heroImage: undefined }))
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor={'hero-file-' + universe.slug}
+                className="flex-1 cursor-pointer rounded-lg border border-border bg-muted hover:bg-muted/80 px-3 py-1.5 text-xs font-medium text-foreground transition-colors truncate"
+              >
+                {form.heroFile ? form.heroFile.name : 'Escolher PNG…'}
+              </label>
               <button
                 data-testid="btn-upload-hero"
                 onClick={handleUploadHero}
                 disabled={uploadingHero || !form.heroFile}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
-                style={{ background: '#475569', color: '#fff' }}
+                className="flex-shrink-0 rounded-lg bg-slate-700 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {uploadingHero ? 'Enviando...' : 'Enviar'}
+                {uploadingHero ? 'Enviando…' : 'Enviar'}
               </button>
             </div>
             {errors.heroImage && (
-              <p data-testid="error-hero-image" className="text-xs text-red-400">
+              <p data-testid="error-hero-image" className="text-xs text-red-500">
                 {errors.heroImage}
               </p>
             )}
@@ -371,8 +386,10 @@ function UniversoCard({
                 if (errors.tagline) setErrors((er) => ({ ...er, tagline: undefined }))
               }}
               maxLength={130}
-              className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              style={{ borderColor: errors.tagline ? '#ef4444' : 'rgba(255,255,255,0.12)' }}
+              className={
+                'w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500 ' +
+                (errors.tagline ? 'border-red-500' : 'border-input')
+              }
               placeholder="Ex: Setup com atitude."
             />
             {errors.tagline && (
@@ -404,12 +421,12 @@ function UniversoCard({
                   }
                 }}
                 maxLength={110}
-                className="w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                style={{
-                  borderColor: (errors as Record<string, string | undefined>)['bullet' + i]
-                    ? '#ef4444'
-                    : 'rgba(255,255,255,0.12)',
-                }}
+                className={
+                  'w-full rounded-lg px-3 py-2 text-sm bg-background border focus:outline-none focus:ring-2 focus:ring-indigo-500 ' +
+                  ((errors as Record<string, string | undefined>)['bullet' + i]
+                    ? 'border-red-500'
+                    : 'border-input')
+                }
               />
               {(errors as Record<string, string | undefined>)['bullet' + i] && (
                 <p data-testid={'error-bullet-' + i} className="text-xs text-red-400 mt-1">

@@ -9,7 +9,6 @@
  *   - npm install @vercel/blob (já instalado)
  */
 
-import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { put } from '@vercel/blob'
 

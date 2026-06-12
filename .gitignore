@@ -57,3 +57,6 @@ playwright-report/
 playwright/.cache/
 
 /src/generated/prisma
+
+.vercel
+.env*

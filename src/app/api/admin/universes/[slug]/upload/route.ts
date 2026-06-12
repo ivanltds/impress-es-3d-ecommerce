@@ -70,19 +70,34 @@ export async function POST(
 
   // Upload to Vercel Blob with deterministic path (no random suffix = overwrites previous)
   const blobPath = 'universes/' + slug + '/' + type + '.png'
-  const blob = await put(blobPath, bytes, {
-    access: 'public',
-    contentType: 'image/png',
-    addRandomSuffix: false,
-  })
+
+  let blob: Awaited<ReturnType<typeof put>>
+  try {
+    blob = await put(blobPath, bytes, {
+      access: 'public',
+      contentType: 'image/png',
+      addRandomSuffix: false,
+    })
+  } catch (err) {
+    console.error('[upload/universe] put() failed:', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: 'Falha no upload: ' + msg }, { status: 500 })
+  }
 
   // Update DB only after successful upload
   const updateField = type === 'card' ? 'cardImageUrl' : 'heroImageUrl'
-  const updated = await prisma.universe.update({
-    where: { slug },
-    data: { [updateField]: blob.url },
-    select: { slug: true, cardImageUrl: true, heroImageUrl: true },
-  })
+  let updated: { slug: string; cardImageUrl: string | null; heroImageUrl: string | null }
+  try {
+    updated = await prisma.universe.update({
+      where: { slug },
+      data: { [updateField]: blob.url },
+      select: { slug: true, cardImageUrl: true, heroImageUrl: true },
+    })
+  } catch (err) {
+    console.error('[upload/universe] prisma.update() failed:', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: 'Falha ao salvar no banco: ' + msg }, { status: 500 })
+  }
 
   return NextResponse.json(updated)
 }

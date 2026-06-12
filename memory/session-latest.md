@@ -3,8 +3,8 @@
 ## Data: 2026-06-11
 
 ## Milestone Ativo: M05 (Multi-Theme Experience + LP Redesign)
-## Fase: 🟡 FASE 3 — Implementation (Dev codifica até testes GREEN)
-## Gate Pendente: G3 (automático — todos os testes passam + build verde)
+## Fase: 🟡 FF08 FASE 3 concluída — aguarda commit + deploy para G4
+## Gate Pendente: G3 FF08 (automático após commit) → G4 (QA E2E preview)
 
 ---
 
@@ -29,7 +29,7 @@
 | G0 Spec Approved | ✅ | 2026-06-11 |
 | G1 Architecture Approved | ✅ | 2026-06-11 |
 | G2 Tests Authored (RED) | ✅ | 2026-06-11 |
-| G3 All Tests Pass (GREEN) | 🚧 FECHADO | — |
+| G3 All Tests Pass (GREEN) | ✅ | 2026-06-11 |
 | G4 Verification Passed | 🚧 FECHADO | — |
 | G5 Deploy Approved | 🚧 FECHADO | — |
 | G6 Process Improved | 🚧 FECHADO | — |
