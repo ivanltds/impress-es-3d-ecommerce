@@ -324,7 +324,7 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 | M02 | Catalog + Experience | 1 | B + C (Produto) | ⬜ A FAZER |
 | M03 | Cart + Checkout + Customer | 1 | C + D | ⬜ A FAZER |
 | M04 | Admin + Operations + Analytics | 1 🎯 MVP | E + F | ✅ CONCLUÍDO (2026-06-11) |
-| M05 | Multi-Theme Experience | 2 | Diferenciação | ⬜ A FAZER |
+| M05 | Multi-Theme Experience | 2 | Diferenciação | ✅ CONCLUÍDO (2026-06-12) |
 | M06 | Personalized Customer Area | 2 | Diferenciação | ⬜ A FAZER |
 | M07 | Growth Engine | 3 | Escala | ⬜ A FAZER |
 | M08 | Scale & Optimize | 3 | Escala | ⬜ A FAZER |
@@ -360,6 +360,13 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 ---
 
 ## 10. CHANGELOG
+
+### v2.2.0 (2026-06-12)
+- M05 marcado como ✅ CONCLUÍDO
+- FF08 (Admin LP) concluído — imagens de universos via admin + Vercel Blob
+- `revalidatePath('/')` adicionado ao upload route — ISR invalidado automaticamente
+- Homepage migrada para `force-dynamic`
+- Script `prisma/seed-universe-images.ts` para seed de hero images
 
 ### v2.1.0 (2026-06-11)
 - M04 marcado como ✅ CONCLUÍDO

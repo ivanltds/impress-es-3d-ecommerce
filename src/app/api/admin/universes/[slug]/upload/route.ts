@@ -1,6 +1,7 @@
 // POST /api/admin/universes/[slug]/upload
 // Faz upload de imagem PNG para Vercel Blob e atualiza cardImageUrl ou heroImageUrl
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { put } from '@vercel/blob'
@@ -98,6 +99,10 @@ export async function POST(
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: 'Falha ao salvar no banco: ' + msg }, { status: 500 })
   }
+
+  // Invalida ISR da homepage para que a imagem apareça imediatamente
+  revalidatePath('/')
+  revalidatePath('/universo/' + slug)
 
   return NextResponse.json(updated)
 }
