@@ -94,20 +94,25 @@ export async function PromoBannerSection() {
   if (!data) return null
 
   return (
-    <section data-testid="promo-banner-section" className="bg-muted/30 py-8">
+    <section data-testid="promo-banner-section" className="bg-primary/5 border-b border-primary/10 py-10">
       <div className="container mx-auto px-4">
         {/* Campaign title (only for campaigns) */}
         {data.type === 'campaign' && data.title && (
-          <h2
-            data-testid="promo-banner-title"
-            className="mb-6 font-heading text-2xl font-bold"
-          >
-            {data.title}
-          </h2>
+          <div className="mb-8 text-center">
+            <span className="inline-block rounded-full bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+              🔥 Promoção especial
+            </span>
+            <h2
+              data-testid="promo-banner-title"
+              className="font-heading text-3xl font-extrabold tracking-tight text-foreground"
+            >
+              {data.title}
+            </h2>
+          </div>
         )}
 
         {/* Product cards */}
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="flex justify-center gap-4 overflow-x-auto pb-2">
           {data.products.map((product, index) => (
             <div
               key={product.id}
@@ -155,7 +160,7 @@ export async function PromoBannerSection() {
                 {/* CTA link to PDP */}
                 <Link
                   data-testid={`promo-banner-card-cta-${index}`}
-                  href={`/produto/${product.slug}`}
+                  href={`/produtos/${product.slug}`}
                   className="mt-2 block rounded-lg bg-primary px-3 py-1.5 text-center text-xs font-semibold text-primary-foreground transition-all hover:scale-105"
                 >
                   Ver produto

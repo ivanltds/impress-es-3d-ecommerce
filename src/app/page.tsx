@@ -78,11 +78,11 @@ export default async function HomePage() {
 
   return (
     <main>
-      <HeroSection preferredSlug={preferredSlug} />
-      {/* F7: Faixa promocional personalizada */}
+      {/* F7: Faixa promocional personalizada — acima do hero para máxima visibilidade */}
       <Suspense fallback={<div className="h-24 animate-pulse bg-muted" />}>
         <PromoBannerSection />
       </Suspense>
+      <HeroSection preferredSlug={preferredSlug} />
       <UniversosSection universes={universeData} preferredSlug={preferredSlug} />
       <ComoFuncionaSection />
       <DestaquesSection universeProducts={universeProducts} />
