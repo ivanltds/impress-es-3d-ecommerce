@@ -117,7 +117,7 @@ export async function PromoBannerSection() {
             <div
               key={product.id}
               data-testid={`promo-banner-card-${index}`}
-              className="w-44 shrink-0 overflow-hidden rounded-xl border bg-card shadow-sm"
+              className="flex w-44 shrink-0 flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
             >
               {/* Image */}
               <div
@@ -133,15 +133,21 @@ export async function PromoBannerSection() {
                     sizes="176px"
                   />
                 ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-muted/80 to-muted-foreground/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-xs text-muted-foreground/50">Sem imagem</span>
+                  </div>
                 )}
               </div>
 
-              <div className="p-3">
+              {/* Card body — flex-col para alinhar botão no fundo */}
+              <div className="flex flex-1 flex-col p-3">
                 {/* Name */}
                 <p
                   data-testid={`promo-banner-card-name-${index}`}
-                  className="line-clamp-2 text-sm font-semibold"
+                  className="line-clamp-2 flex-1 text-sm font-semibold"
                 >
                   {product.name}
                 </p>
@@ -157,11 +163,11 @@ export async function PromoBannerSection() {
                   })}
                 </p>
 
-                {/* CTA link to PDP */}
+                {/* CTA link to PDP — mt-auto garante alinhamento mesmo com nomes de tamanhos diferentes */}
                 <Link
                   data-testid={`promo-banner-card-cta-${index}`}
                   href={`/produtos/${product.slug}`}
-                  className="mt-2 block rounded-lg bg-primary px-3 py-1.5 text-center text-xs font-semibold text-primary-foreground transition-all hover:scale-105"
+                  className="mt-auto block rounded-lg bg-primary px-3 py-1.5 text-center text-xs font-semibold text-primary-foreground transition-all hover:scale-105"
                 >
                   Ver produto
                 </Link>
