@@ -1,4 +1,4 @@
-// ─── M04: Checkout API — Create Order ───
+// M04: Checkout API - Create Order
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
@@ -42,6 +42,23 @@ export async function POST(request: NextRequest) {
       await prisma.user.update({ where: { id: userId }, data: { document } }).catch(() => {})
     }
 
+    // DA-M06-02: Enrich items with universeSlug for post-checkout suggestion (F4)
+    // Guard against missing prisma.productUniverse (e.g. in test envs with partial mock)
+    const enrichedItems = await Promise.all(
+      items.map(async (i: { productId: string; name: string; sku?: string; qty: number; price: number }) => {
+        try {
+          if (!prisma.productUniverse) return { ...i, universeSlug: null }
+          const pu = await prisma.productUniverse.findFirst({
+            where: { productId: i.productId },
+            include: { universe: { select: { slug: true } } },
+          })
+          return { ...i, universeSlug: pu?.universe?.slug ?? null }
+        } catch {
+          return { ...i, universeSlug: null }
+        }
+      })
+    )
+
     const order = await prisma.order.create({
       data: {
         userId,
@@ -54,14 +71,14 @@ export async function POST(request: NextRequest) {
         total,
         currency: 'BRL',
         sourceChannel,
-        cep:             cep      || null,
-        shippingStreet:  street   || null,
-        shippingNumber:  number   || null,
+        cep:              cep      || null,
+        shippingStreet:   street   || null,
+        shippingNumber:   number   || null,
         shippingDistrict: district || null,
-        shippingCity:    city     || null,
-        shippingState:   state    || null,
+        shippingCity:     city     || null,
+        shippingState:    state    || null,
         items: {
-          create: items.map((i: { productId: string; name: string; sku?: string; qty: number; price: number }) => ({
+          create: enrichedItems.map((i) => ({
             productId: i.productId,
             productNameSnapshot: i.name,
             skuSnapshot: i.sku || i.productId,
@@ -74,7 +91,23 @@ export async function POST(request: NextRequest) {
       include: { items: true },
     })
 
-    return NextResponse.json({ success: true, orderNumber: order.orderNumber, orderId: order.id, total }, { status: 201 })
+    // Include universeSlug in response so confirmado page can read it from localStorage
+    const itemsForStorage = enrichedItems.map((i) => ({
+      name: i.name,
+      qty: i.qty,
+      universeSlug: i.universeSlug,
+    }))
+
+    return NextResponse.json(
+      {
+        success: true,
+        orderNumber: order.orderNumber,
+        orderId: order.id,
+        total,
+        items: itemsForStorage,
+      },
+      { status: 201 },
+    )
   } catch (err) {
     console.error('[checkout] Error:', err)
     return NextResponse.json({ error: 'Erro ao criar pedido' }, { status: 500 })

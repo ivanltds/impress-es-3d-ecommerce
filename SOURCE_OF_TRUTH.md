@@ -325,7 +325,7 @@ Um milestone está **PRONTO** quando TODOS os itens abaixo são verdadeiros:
 | M03 | Cart + Checkout + Customer | 1 | C + D | ⬜ A FAZER |
 | M04 | Admin + Operations + Analytics | 1 🎯 MVP | E + F | ✅ CONCLUÍDO (2026-06-11) |
 | M05 | Multi-Theme Experience | 2 | Diferenciação | ✅ CONCLUÍDO (2026-06-12) |
-| M06 | Personalized Customer Area | 2 | Diferenciação | ⬜ A FAZER |
+| M06 | Personalized Customer Area | 2 | Diferenciação | 🔄 EM ANDAMENTO (G2 ✅) |
 | M07 | Growth Engine | 3 | Escala | ⬜ A FAZER |
 | M08 | Scale & Optimize | 3 | Escala | ⬜ A FAZER |
 

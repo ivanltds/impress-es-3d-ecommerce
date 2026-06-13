@@ -1,5 +1,6 @@
-// Homepage — M05 LP Redesign
-// Server Component with ISR (1 hour)
+// Homepage - M05 LP Redesign + M06 PromoBanner
+// Server Component with force-dynamic
+import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
@@ -11,6 +12,7 @@ import { ComoFuncionaSection } from '@/components/universe/ComoFuncionaSection'
 import { DestaquesSection } from '@/components/universe/DestaquesSection'
 import { ProvaSocialSection } from '@/components/universe/ProvaSocialSection'
 import { WhatsAppCTA } from '@/components/universe/WhatsAppCTA'
+import { PromoBannerSection } from '@/components/home/PromoBannerSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +20,7 @@ export default async function HomePage() {
   const cookieStore = await cookies()
   const universeCookie = cookieStore.get('universe_pref')?.value ?? null
   const session = await auth()
-  const preferredSlug = getUniversePreference(session as any, universeCookie)
+  const preferredSlug = getUniversePreference(session as never, universeCookie)
 
   const [universes, settings, testimonials] = await Promise.all([
     prisma.universe.findMany({ orderBy: { sortOrder: 'asc' } }),
@@ -42,26 +44,27 @@ export default async function HomePage() {
         take: 3,
         orderBy: { createdAt: 'desc' },
       })
-      return { universeSlug: slug, products: products as any[] }
+      return { universeSlug: slug, products: products as never[] }
     })
   )
 
   // Normalize universe data shape for UniversosSection
-  // Fallback: se banco vazio, usar config estatica (DB recem-criado sem seed)
-  // FF08: incluir campos novos (cardImageUrl, heroImageUrl, tagline, bullets)
   const universeData = universes.length > 0
-    ? (universes as any[]).map((u: any) => ({
-        slug: u.slug as string,
-        name: (u.name || (UNIVERSE_CONFIG[u.slug] ? UNIVERSE_CONFIG[u.slug].name : u.slug)) as string,
-        comingSoon: Boolean(u.comingSoon),
-        sortOrder: Number(u.sortOrder ?? 0),
+    ? (universes as never[]).map((u: never) => ({
+        slug: (u as { slug: string }).slug,
+        name: ((u as { name?: string; slug: string }).name
+          || (UNIVERSE_CONFIG[(u as { slug: string }).slug]
+            ? UNIVERSE_CONFIG[(u as { slug: string }).slug].name
+            : (u as { slug: string }).slug)) as string,
+        comingSoon: Boolean((u as { comingSoon?: boolean }).comingSoon),
+        sortOrder: Number((u as { sortOrder?: number }).sortOrder ?? 0),
         publishedProductCount: 0,
-        cardImageUrl: u.cardImageUrl ?? null,
-        heroImageUrl: u.heroImageUrl ?? null,
-        tagline: u.tagline ?? null,
-        bullets: u.bullets ?? [],
+        cardImageUrl: (u as { cardImageUrl?: string | null }).cardImageUrl ?? null,
+        heroImageUrl: (u as { heroImageUrl?: string | null }).heroImageUrl ?? null,
+        tagline: (u as { tagline?: string | null }).tagline ?? null,
+        bullets: (u as { bullets?: string[] }).bullets ?? [],
       }))
-    : Object.values(UNIVERSE_CONFIG).map(c => ({
+    : Object.values(UNIVERSE_CONFIG).map((c) => ({
         slug: c.slug,
         name: c.name,
         comingSoon: false,
@@ -76,10 +79,14 @@ export default async function HomePage() {
   return (
     <main>
       <HeroSection preferredSlug={preferredSlug} />
+      {/* F7: Faixa promocional personalizada */}
+      <Suspense fallback={<div className="h-24 animate-pulse bg-muted" />}>
+        <PromoBannerSection />
+      </Suspense>
       <UniversosSection universes={universeData} preferredSlug={preferredSlug} />
       <ComoFuncionaSection />
       <DestaquesSection universeProducts={universeProducts} />
-      <ProvaSocialSection testimonials={testimonials as any[]} />
+      <ProvaSocialSection testimonials={testimonials as never[]} />
       {settings && settings.whatsappPhone && (
         <WhatsAppCTA
           whatsappPhone={settings.whatsappPhone}

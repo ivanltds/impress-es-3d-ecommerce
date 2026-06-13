@@ -127,6 +127,7 @@ model Product {
   customizationSchema    Json?    // array de CustomizationField — define o formulário de personalização
   category               Category? @relation(fields: [categoryId], references: [id])
   universes              ProductUniverse[]  // ← M05: relação M:N com universos
+  promoBanners           PromoBannerProduct[]  // ← M06: relação com faixa promocional
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
@@ -301,7 +302,34 @@ model Testimonial {
   isPublished  Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-
   @@index([isPublished])
   @@index([universeId, isPublished])
+}
+
+// ─── M06: Feature 7 — Faixa Promocional ──────────────────────────────────────
+
+model PromoBanner {
+  id        String               @id @default(cuid())
+  title     String
+  subtitle  String?
+  startsAt  DateTime
+  endsAt    DateTime
+  isActive  Boolean              @default(true)
+  products  PromoBannerProduct[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([isActive, startsAt, endsAt])
+}
+
+model PromoBannerProduct {
+  bannerId  String
+  productId String
+  sortOrder Int         @default(0)
+
+  banner    PromoBanner @relation(fields: [bannerId],  references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([bannerId, productId])
+  @@index([bannerId, sortOrder])
 }
